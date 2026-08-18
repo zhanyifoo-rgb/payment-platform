@@ -1,15 +1,15 @@
-from enums import Enums
+from enum import Enum
 from decimal import Decimal 
 from pydantic import BaseModel, Field
 
 # region Enums
-class PaymentStatus(str, Enums):
+class PaymentStatus(str, Enum):
     PENDING = "pending"
     PROCESSING = "processing"
     SUCCEEDED = "succeeded"
     FAILED = "failed" 
 
-class Currencies(str, Enums):
+class Currencies(str, Enum):
     MYR = "MYR"
     USD = "USD"
     SGD = "SGD"
@@ -17,6 +17,14 @@ class Currencies(str, Enums):
 # endregion 
 
 class PaymentRequest(BaseModel):
-    customer_id: str
+    customer_id: int
     amount: Decimal = Field(gt=0,decimal_places=2)
-    currency: str
+    currency: Currencies
+
+
+class PaymentResponse(BaseModel):
+    payment_id: str
+    customer_id: int
+    amount: Decimal
+    currency: Currencies
+    status: str
