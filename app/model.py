@@ -1,7 +1,9 @@
-from sqlalchemy import Column, Integer, String, Numeric, DateTime, Enum
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy import Numeric, DateTime,ForeignKey, UUID, String
+from sqlalchemy.orm import DeclarativeBase,relationship,mapped_column,Mapped
 from .schemas import PaymentStatus, Currencies
 from datetime import datetime, timezone
+from uuid import uuid4,UUID as pythonUUID
+from decimal import Decimal
 
 class Base(DeclarativeBase):
     pass
@@ -9,10 +11,22 @@ class Base(DeclarativeBase):
 class Payment(Base):
     __tablename__ = "payments"
 
-    id = Column(Integer, primary_key=True)
-    customer_id = Column(Integer, nullable = False)
-    amount = Column(Numeric(10,2), nullable = False)
-    currency = Column(Enum(Currencies), nullable = False)
-    payment_status = Column(Enum(PaymentStatus), nullable=False)
-    created_at = Column(DateTime,default=lambda : datetime.now(timezone.utc),nullable=False)
+    id: Mapped[int]= mapped_column(primary_key=True)
+    payment_id: Mapped[pythonUUID] = mapped_column(UUID(as_uuid=True),default=uuid4, nullable = False, unique=True)
+    customer_id: Mapped[int] = mapped_column(nullable = False)
+    amount: Mapped[Decimal] = mapped_column(Numeric(10,2), nullable = False)
+    currency: Mapped[Currencies] = mapped_column(nullable = False)
+    payment_status: Mapped[PaymentStatus] = mapped_column(nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),default=lambda : datetime.now(timezone.utc),nullable=False)
 
+    idempotency = relationship("IdempotencyKey", back_populates="payment")
+
+class IdempotencyKey(Base):
+    __tablename__ = "idempotency_keys"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    payment_id: Mapped[pythonUUID] = mapped_column(ForeignKey("payments.payment_id"),unique=True,nullable=False)
+    idempotency_key: Mapped[str] = mapped_column(unique=True,nullable=False)
+    request_hash: Mapped[str] = mapped_column(String(64),nullable=False)
+
+    payment = relationship("Payment",back_populates="idempotency")
