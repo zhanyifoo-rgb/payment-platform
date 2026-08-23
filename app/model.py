@@ -20,6 +20,7 @@ class Payment(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),default=lambda : datetime.now(timezone.utc),nullable=False)
 
     idempotency = relationship("IdempotencyKey", back_populates="payment")
+    payment_status_history = relationship("PaymentStatusHistory", back_populates="payment")
 
 class IdempotencyKey(Base):
     __tablename__ = "idempotency_keys"
@@ -30,3 +31,14 @@ class IdempotencyKey(Base):
     request_hash: Mapped[str] = mapped_column(String(64),nullable=False)
 
     payment = relationship("Payment",back_populates="idempotency")
+
+class PaymentStatusHistory(Base):
+    __tablename__ = "payment_status_history"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    payment_id: Mapped[pythonUUID] = mapped_column(ForeignKey("payments.payment_id"),unique=True,nullable=False)
+    old_status: Mapped[PaymentStatus] = mapped_column(nullable=False)
+    new_status: Mapped[PaymentStatus] = mapped_column(nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),default=lambda : datetime.now(timezone.utc),nullable=False)
+
+    payment = relationship("Payment",back_populates="payment_status_history")

@@ -1,12 +1,14 @@
 from fastapi import FastAPI, Depends, Header, HTTPException
-from .schemas import PaymentResponse,PaymentRequest,PaymentStatus
+from .schemas import PaymentResponse,PaymentRequest,PaymentStatus, PaymentStatusUpdate
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 import json
 import hashlib
 from .database import SessionLocal
-from .model import Payment,IdempotencyKey
+from .services.payment_service import transition_payment
+from .model import Payment,IdempotencyKey,PaymentStatusHistory
+from uuid import UUID
 
 app = FastAPI()
 
@@ -82,6 +84,47 @@ def create_payment(payment: PaymentRequest, db: Session = Depends(get_db), idemp
                 currency=new_payment.currency,
                 status=new_payment.payment_status
             )
+
+@app.patch("/payments/{payment_id}/status")
+def update_payment_status(payment_id: UUID,request: PaymentStatusUpdate,db: Session = Depends(get_db)):
+
+    payment = db.execute(select(Payment).where(Payment.payment_id == payment_id)).scalar_one_or_none()
+
+    if payment is None:
+        raise HTTPException(
+        status_code=404,
+        detail="Payment not found"
+    )
+
+    old_status = payment.payment_status
+    
+    try:
+        transition_payment(payment, request.status)
+
+        new_payment_status_history = PaymentStatusHistory(
+                payment_id = payment_id,
+                old_status = old_status,
+                new_status = payment.payment_status
+            )
+
+        db.add(new_payment_status_history)
+        db.commit()
+        
+    except ValueError as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail=str(e)
+        )
+
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+        status_code=500,
+        detail="Failed to update payment status"
+        )
+        
+    return payment
 
 
 def create_request_hash(payment: PaymentRequest) -> str:

@@ -8,6 +8,7 @@ class PaymentStatus(str, Enum):
     PROCESSING = "processing"
     SUCCEEDED = "succeeded"
     FAILED = "failed" 
+    CANCELLED = "cancelled" 
 
 class Currencies(str, Enum):
     MYR = "MYR"
@@ -28,3 +29,6 @@ class PaymentResponse(BaseModel):
     amount: Decimal
     currency: Currencies
     status: str
+
+class PaymentStatusUpdate(BaseModel):
+    status: PaymentStatus
