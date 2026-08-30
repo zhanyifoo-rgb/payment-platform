@@ -1,6 +1,7 @@
 from enum import Enum
 from decimal import Decimal 
 from pydantic import BaseModel, Field
+from uuid import UUID
 
 # region Enums
 class PaymentStatus(str, Enum):
@@ -24,11 +25,11 @@ class PaymentRequest(BaseModel):
 
 
 class PaymentResponse(BaseModel):
-    payment_id: str
+    payment_id: UUID
     customer_id: int
     amount: Decimal
     currency: Currencies
-    status: str
+    status: PaymentStatus
 
 class PaymentStatusUpdate(BaseModel):
     status: PaymentStatus

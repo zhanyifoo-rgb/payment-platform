@@ -85,10 +85,11 @@ def create_payment(payment: PaymentRequest, db: Session = Depends(get_db), idemp
                 status=new_payment.payment_status
             )
 
-@app.patch("/payments/{payment_id}/status")
+@app.patch("/payments/{payment_id}/status",response_model=PaymentResponse)
 def update_payment_status(payment_id: UUID,request: PaymentStatusUpdate,db: Session = Depends(get_db)):
 
-    payment = db.execute(select(Payment).where(Payment.payment_id == payment_id)).scalar_one_or_none()
+    # Lock payment row until a transaction finishes
+    payment = db.execute(select(Payment).where(Payment.payment_id == payment_id).with_for_update()).scalar_one_or_none()
 
     if payment is None:
         raise HTTPException(
@@ -123,8 +124,14 @@ def update_payment_status(payment_id: UUID,request: PaymentStatusUpdate,db: Sess
         status_code=500,
         detail="Failed to update payment status"
         )
-        
-    return payment
+
+    return PaymentResponse(
+                payment_id=payment.payment_id,
+                customer_id=payment.customer_id,
+                amount=payment.amount,
+                currency=payment.currency,
+                status=payment.payment_status
+            )
 
 
 def create_request_hash(payment: PaymentRequest) -> str:

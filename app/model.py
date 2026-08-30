@@ -36,7 +36,7 @@ class PaymentStatusHistory(Base):
     __tablename__ = "payment_status_history"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    payment_id: Mapped[pythonUUID] = mapped_column(ForeignKey("payments.payment_id"),unique=True,nullable=False)
+    payment_id: Mapped[pythonUUID] = mapped_column(ForeignKey("payments.payment_id"),nullable=False)
     old_status: Mapped[PaymentStatus] = mapped_column(nullable=False)
     new_status: Mapped[PaymentStatus] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),default=lambda : datetime.now(timezone.utc),nullable=False)
