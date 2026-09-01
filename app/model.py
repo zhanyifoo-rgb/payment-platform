@@ -1,6 +1,6 @@
 from sqlalchemy import Numeric, DateTime,ForeignKey, UUID, String
 from sqlalchemy.orm import DeclarativeBase,relationship,mapped_column,Mapped
-from .schemas import PaymentStatus, Currencies
+from .schemas import PaymentStatus, Currencies, UserRoles
 from datetime import datetime, timezone
 from uuid import uuid4,UUID as pythonUUID
 from decimal import Decimal
@@ -42,3 +42,14 @@ class PaymentStatusHistory(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),default=lambda : datetime.now(timezone.utc),nullable=False)
 
     payment = relationship("Payment",back_populates="payment_status_history")
+
+class Users(Base):
+    __tablename__ = "Users"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[pythonUUID] = mapped_column(UUID(as_uuid=True),default=uuid4, nullable = False, unique=True)
+    username: Mapped[String] = mapped_column(unique=True,nullable=False)
+    password_hash: Mapped[String] = mapped_column(nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),default=lambda : datetime.now(timezone.utc),nullable=False)
+    role: Mapped[UserRoles] = mapped_column(nullable=False)
+
