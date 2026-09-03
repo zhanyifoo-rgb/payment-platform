@@ -8,27 +8,28 @@ from concurrent.futures import ThreadPoolExecutor
 
 client = TestClient(app)
 
-def test_payment_not_found():
+def test_payment_not_found(auth_headers):
     response = client.patch(
         "/payments/00000000-0000-0000-0000-000000000000/status",
         json = {
             "status": "succeeded"
-        }
+        },
+        headers=auth_headers
     )
 
     assert response.status_code == 404
 
-def test_payment_status_update():
+def test_payment_status_update(auth_headers):
     response = client.post(
         "/payments",
         json = {
-            "customer_id": 13533,
+            "user_id": 13533,
             "amount": 100.55,
             "currency": "MYR"
         },
         headers={
             "Idempotency-key" : "test-13533"
-        }
+        }.update(auth_headers)
     )
 
     payment_id = response.json()["payment_id"]
@@ -37,25 +38,26 @@ def test_payment_status_update():
         f"/payments/{payment_id}/status",
         json = {
             "status": "processing"
-        }
+        },
+        headers=auth_headers
 
     )
     
     assert response.status_code == 200
     assert response.json()["status"] == PaymentStatus.PROCESSING.value
 
-def test_invalid_status_transition(db: Session):
+def test_invalid_status_transition(db: Session,auth_headers):
     # Create payment
     response = client.post(
         "/payments",
         json={
-            "customer_id": 13533,
+            "user_id": 13533,
             "amount": 100,
             "currency": "MYR"
         },
         headers={
             "Idempotency-Key": "test-invalid-transition"
-        }
+        }.update(auth_headers)
     )
     
     payment_id = response.json()["payment_id"]
@@ -65,7 +67,8 @@ def test_invalid_status_transition(db: Session):
         f"/payments/{payment_id}/status",
         json={
             "status": "processing"
-        }
+        },
+        headers=auth_headers
     )
 
     assert response.status_code == 200
@@ -82,23 +85,24 @@ def test_invalid_status_transition(db: Session):
         f"/payments/{payment_id}/status",
         json={
             "status": "cancelled"
-        }
+        },
+        headers=auth_headers
     )
 
     assert response.status_code == 409
 
 
-def test_idempotent_payment_creation():
+def test_idempotent_payment_creation(auth_headers):
 
     payload = {
-            "customer_id": 13533,
+            "user_id": 13533,
             "amount": 100,
             "currency": "MYR"
         }
     
     headers={
             "Idempotency-Key": "same-key-123"
-        }
+        }.update(auth_headers)
 
     response1 = client.post(
         "/payments",
@@ -119,18 +123,18 @@ def test_idempotent_payment_creation():
         == response2.json()["payment_id"]
     )
 
-    def test_concurrent_update_payment_status():
+    def test_concurrent_update_payment_status(auth_headers):
         # Create payment
             response = client.post(
                 "/payments",
                 json={
-                    "customer_id": 135343,
+                    "user_id": 135343,
                     "amount": 100,
                     "currency": "MYR"
                 },
                 headers={
                     "Idempotency-Key": "test_concurrent_update_payment_status"
-                }
+                }.update(auth_headers)
             )
             
             payment_id = response.json()["payment_id"]
@@ -140,7 +144,8 @@ def test_idempotent_payment_creation():
                 f"/payments/{payment_id}/status",
                 json={
                     "status": "processing"
-                }
+                },
+                headers=auth_headers
             )
 
             def update_to_succeeded():
@@ -149,7 +154,8 @@ def test_idempotent_payment_creation():
                             f"/payments/{payment_id}/status",
                             json={
                                 "status": "succeeded"
-                            }
+                            },
+                            headers=auth_headers
                         )
 
             def update_to_failed():
@@ -158,7 +164,8 @@ def test_idempotent_payment_creation():
                             f"/payments/{payment_id}/status",
                             json={
                                 "status": "failed"
-                            }
+                            },
+                            headers=auth_headers
                         )
 
             # submit concurrent request 

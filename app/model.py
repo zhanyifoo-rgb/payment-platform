@@ -13,7 +13,7 @@ class Payment(Base):
 
     id: Mapped[int]= mapped_column(primary_key=True)
     payment_id: Mapped[pythonUUID] = mapped_column(UUID(as_uuid=True),default=uuid4, nullable = False, unique=True)
-    customer_id: Mapped[int] = mapped_column(nullable = False)
+    user_id: Mapped[pythonUUID] = mapped_column(UUID(as_uuid=True),default=uuid4, nullable = False)
     amount: Mapped[Decimal] = mapped_column(Numeric(10,2), nullable = False)
     currency: Mapped[Currencies] = mapped_column(nullable = False)
     payment_status: Mapped[PaymentStatus] = mapped_column(nullable=False)

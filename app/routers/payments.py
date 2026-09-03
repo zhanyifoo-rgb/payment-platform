@@ -7,16 +7,20 @@ import json
 import hashlib
 from app.database import get_db
 from app.services.payment_service import transition_payment
-from app.model import Payment,IdempotencyKey,PaymentStatusHistory
+from app.model import Payment,IdempotencyKey,PaymentStatusHistory, Users
+from app.utils.security import get_current_user, requires_admin
 from uuid import UUID
 
 router = APIRouter(prefix="/api/v1/payments",tags=["payments"])
 
 @router.post("", response_model=PaymentResponse)
-def create_payment(payment: PaymentRequest, db: Session = Depends(get_db), idempotency_key: str = Header(...)):
+def create_payment(payment: PaymentRequest, 
+                   db: Session = Depends(get_db), 
+                   idempotency_key: str = Header(...),
+                   current_user: Users = Depends(get_current_user)):
 
     new_payment = Payment(
-                    customer_id=payment.customer_id,
+                    user_id=current_user.user_id,
                     amount=payment.amount,
                     currency=payment.currency,
                     payment_status = PaymentStatus.PENDING
@@ -67,14 +71,16 @@ def create_payment(payment: PaymentRequest, db: Session = Depends(get_db), idemp
 
     return PaymentResponse(
                 payment_id=new_payment.payment_id,
-                customer_id=new_payment.customer_id,
+                user_id=new_payment.user_id,
                 amount=new_payment.amount,
                 currency=new_payment.currency,
                 status=new_payment.payment_status
             )
 
 @router.patch("/{payment_id}/status",response_model=PaymentResponse)
-def update_payment_status(payment_id: UUID,request: PaymentStatusUpdate,db: Session = Depends(get_db)):
+def update_payment_status(payment_id: UUID,request: PaymentStatusUpdate,
+                          db: Session = Depends(get_db),
+                          current_user: Users = Depends(requires_admin)):
 
     # Lock payment row until a transaction finishes
     payment = db.execute(select(Payment).where(Payment.payment_id == payment_id).with_for_update()).scalar_one_or_none()
@@ -115,7 +121,7 @@ def update_payment_status(payment_id: UUID,request: PaymentStatusUpdate,db: Sess
 
     return PaymentResponse(
                 payment_id=payment.payment_id,
-                customer_id=payment.customer_id,
+                user_id=payment.user_id,
                 amount=payment.amount,
                 currency=payment.currency,
                 status=payment.payment_status
@@ -124,7 +130,7 @@ def update_payment_status(payment_id: UUID,request: PaymentStatusUpdate,db: Sess
 
 def create_request_hash(payment: PaymentRequest) -> str:
     data = {
-        "customer_id": payment.customer_id,
+        "customer_id": payment.user_id,
         "amount": str(payment.amount),
         "currency": payment.currency.value
     }
