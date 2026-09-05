@@ -32,7 +32,7 @@ def create_access_token(data: dict, expires_delta: timedelta = timedelta(minutes
     return jwt.encode(
         to_encode,
         settings.secret_key,
-        algorithm=[settings.algorithm]
+        algorithm=settings.algorithm
     )
 
 oauth2_schema = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
@@ -49,7 +49,7 @@ def get_current_user(token: str = Depends(oauth2_schema), db: Session = Depends(
         payload = jwt.decode(
             token,
             settings.secret_key,
-            algorithm=[settings.algorithm]
+            algorithms=[settings.algorithm]
         )
 
         user_id = payload.get("sub")
@@ -63,7 +63,7 @@ def get_current_user(token: str = Depends(oauth2_schema), db: Session = Depends(
     except (JWTError, ValueError):
         raise credentials_exception
 
-    user = db.scalar(select(Users).where(Users.user_id is user_id))
+    user = db.scalar(select(Users).where(Users.user_id == user_id))
 
     if not user:
         raise credentials_exception

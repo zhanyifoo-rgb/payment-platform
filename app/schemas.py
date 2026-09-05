@@ -25,7 +25,6 @@ class UserRoles(str, Enum):
 
 # region payments
 class PaymentRequest(BaseModel):
-    user_id: UUID
     amount: Decimal = Field(gt=0,decimal_places=2)
     currency: Currencies
 
@@ -45,7 +44,6 @@ class PaymentStatusUpdate(BaseModel):
 class UserRegister(BaseModel):
     username: str
     password: str
-    role: UserRoles
 
 class UserResponse(BaseModel):
     user_id: UUID

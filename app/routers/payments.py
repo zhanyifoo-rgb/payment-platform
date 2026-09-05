@@ -7,13 +7,34 @@ import json
 import hashlib
 from app.database import get_db
 from app.services.payment_service import transition_payment
-from app.model import Payment,IdempotencyKey,PaymentStatusHistory, Users
+from app.model import Payment,IdempotencyKey,PaymentStatusHistory, Users,UserRoles
 from app.utils.security import get_current_user, requires_admin
 from uuid import UUID
+from app.messaging.publisher import send_process_payment_message
 
 router = APIRouter(prefix="/api/v1/payments",tags=["payments"])
 
-@router.post("", response_model=PaymentResponse)
+@router.get("/get/{payment_id}",response_model=PaymentResponse)
+def get_payment(payment_id: UUID,db: Session = Depends(get_db),current_user: Users = Depends(get_current_user)):
+
+    payment = db.scalar(select(Payment).where(Payment.payment_id == payment_id))
+
+    if not payment:
+        raise HTTPException(status_code=404,detail="payment not found.")
+
+    if current_user.role is UserRoles.CUSTOMER and current_user.user_id != payment.user_id:
+        raise HTTPException(status_code=403,detail="Unable to access payment as it belongs to a different user.")
+
+    return PaymentResponse(
+                payment_id=payment.payment_id,
+                user_id=payment.user_id,
+                amount=payment.amount,
+                currency=payment.currency,
+                status=payment.payment_status
+            )
+
+
+@router.post("create", response_model=PaymentResponse)
 def create_payment(payment: PaymentRequest, 
                    db: Session = Depends(get_db), 
                    idempotency_key: str = Header(...),
@@ -69,6 +90,8 @@ def create_payment(payment: PaymentRequest,
         db.rollback()
         raise
 
+    send_process_payment_message(str(new_payment.payment_id))
+    
     return PaymentResponse(
                 payment_id=new_payment.payment_id,
                 user_id=new_payment.user_id,
