@@ -1,6 +1,4 @@
-from app.main import channel
-from app.database import get_db
-from fastapi import Depends,HTTPException
+from app.messaging.rabbitmq import channel
 from sqlalchemy import select
 from app.database import SessionLocal
 from app.model import Payment,PaymentStatus,PaymentStatusHistory
@@ -73,5 +71,6 @@ def on_message_received(ch,method,properties,body):
     finally:
         db.close()
 
+channel.queue_declare(queue="payment_processing_queue", durable = True)
 channel.basic_consume(queue='payment_processing_queue', auto_ack=False,on_message_callback=on_message_received)
 channel.start_consuming()

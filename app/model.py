@@ -13,7 +13,7 @@ class Payment(Base):
 
     id: Mapped[int]= mapped_column(primary_key=True)
     payment_id: Mapped[pythonUUID] = mapped_column(UUID(as_uuid=True),default=uuid4, nullable = False, unique=True)
-    user_id: Mapped[pythonUUID] = mapped_column(UUID(as_uuid=True),default=uuid4, nullable = False)
+    user_id: Mapped[pythonUUID] = mapped_column(UUID(as_uuid=True),ForeignKey("users.user_id"), nullable = False)
     amount: Mapped[Decimal] = mapped_column(Numeric(10,2), nullable = False)
     currency: Mapped[Currencies] = mapped_column(nullable = False)
     payment_status: Mapped[PaymentStatus] = mapped_column(nullable=False)
@@ -21,6 +21,10 @@ class Payment(Base):
 
     idempotency = relationship("IdempotencyKey", back_populates="payment")
     payment_status_history = relationship("PaymentStatusHistory", back_populates="payment")
+    user = relationship(
+    "Users",
+    back_populates="payment"
+)
 
 class IdempotencyKey(Base):
     __tablename__ = "idempotency_keys"
@@ -44,12 +48,16 @@ class PaymentStatusHistory(Base):
     payment = relationship("Payment",back_populates="payment_status_history")
 
 class Users(Base):
-    __tablename__ = "Users"
+    __tablename__ = "users"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[pythonUUID] = mapped_column(UUID(as_uuid=True),default=uuid4, nullable = False, unique=True)
-    username: Mapped[String] = mapped_column(unique=True,nullable=False)
-    password_hash: Mapped[String] = mapped_column(nullable=False)
+    user_id: Mapped[pythonUUID] = mapped_column(UUID(as_uuid=True),default=uuid4, nullable = False,primary_key=True)
+    username: Mapped[str] = mapped_column(unique=True,nullable=False)
+    password_hash: Mapped[str] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),default=lambda : datetime.now(timezone.utc),nullable=False)
     role: Mapped[UserRoles] = mapped_column(nullable=False)
+
+    payment = relationship(
+        "Payment",
+        back_populates="user"
+    )
 

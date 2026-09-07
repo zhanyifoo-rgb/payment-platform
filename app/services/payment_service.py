@@ -14,5 +14,6 @@ def transition_payment(payment,new_status: PaymentStatus):
     if new_status not in allowed:
         raise ValueError(f"Cannot transition from {payment.payment_status} to {new_status}")
 
+    print(f"{payment.payment_id} transition from {payment.payment_status} to {new_status}")
     payment.payment_status = new_status
     

@@ -19,7 +19,7 @@ def register(form_data: UserRegister, db: Session = Depends(get_db)):
 
     if user:
         raise HTTPException(status_code=409,detail="Username already existed.")
-
+    
     # Try to register User
     # TODO: create admin through other methods instead of registering.
     try:

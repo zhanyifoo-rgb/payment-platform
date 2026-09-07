@@ -14,3 +14,7 @@ def setup_rabbitmq(channel):
     channel.queue_declare(queue="payment_processing_queue", durable = True)
 
     channel.queue_bind(exchange="payments",queue="payment_processing_queue",routing_key="payment.created")
+
+
+channel = create_connection().channel()
+setup_rabbitmq(channel)

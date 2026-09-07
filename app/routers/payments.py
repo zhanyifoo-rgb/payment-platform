@@ -47,7 +47,7 @@ def create_payment(payment: PaymentRequest,
                     payment_status = PaymentStatus.PENDING
                 )
 
-    current_request_hash = create_request_hash(payment)
+    current_request_hash = create_request_hash(payment,current_user.user_id)
     
     try:
         db.add(new_payment)
@@ -151,9 +151,9 @@ def update_payment_status(payment_id: UUID,request: PaymentStatusUpdate,
             )
 
 
-def create_request_hash(payment: PaymentRequest) -> str:
+def create_request_hash(payment: PaymentRequest, user_id: UUID) -> str:
     data = {
-        "customer_id": payment.user_id,
+        "customer_id": str(user_id),
         "amount": str(payment.amount),
         "currency": payment.currency.value
     }

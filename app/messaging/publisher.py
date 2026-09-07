@@ -1,4 +1,4 @@
-from app.main import channel
+from app.messaging.rabbitmq import channel
 
 def send_process_payment_message(payment_id: str):
     # all payments are succeed for now
