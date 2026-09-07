@@ -1,5 +1,4 @@
-﻿# payment-platform
-# Payment Platform
+﻿# Payment Platform
 
 A backend payment-processing simulation built with **FastAPI, PostgreSQL, SQLAlchemy, Alembic, RabbitMQ, and Docker**.
 
