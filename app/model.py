@@ -1,5 +1,6 @@
 from sqlalchemy import Numeric, DateTime,ForeignKey, UUID, String
 from sqlalchemy.orm import DeclarativeBase,relationship,mapped_column,Mapped
+from sqlalchemy.dialects.postgresql import JSONB
 from .schemas import PaymentStatus, Currencies, UserRoles
 from datetime import datetime, timezone
 from uuid import uuid4,UUID as pythonUUID
@@ -47,17 +48,28 @@ class PaymentStatusHistory(Base):
 
     payment = relationship("Payment",back_populates="payment_status_history")
 
-class Users(Base):
+class User(Base):
     __tablename__ = "users"
 
-    user_id: Mapped[pythonUUID] = mapped_column(UUID(as_uuid=True),default=uuid4, nullable = False,primary_key=True)
+    user_id: Mapped[pythonUUID] = mapped_column(UUID(as_uuid=True),default=uuid4,primary_key=True)
     username: Mapped[str] = mapped_column(unique=True,nullable=False)
     password_hash: Mapped[str] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),default=lambda : datetime.now(timezone.utc),nullable=False)
     role: Mapped[UserRoles] = mapped_column(nullable=False)
 
-    payment = relationship(
+    payments = relationship(
         "Payment",
         back_populates="user"
     )
+
+class OutboxEvent(Base):
+    __tablename__ = "outbox_events"
+
+    event_id: Mapped[int] = mapped_column(primary_key=True)
+    event_type: Mapped[str] = mapped_column(nullable=False)
+    aggregate_id: Mapped[str] = mapped_column(nullable=False)
+    payload: Mapped[dict] = mapped_column(JSONB,nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),default=lambda : datetime.now(timezone.utc),nullable=False)
+    published_at: Mapped[datetime|None] = mapped_column(DateTime(timezone=True),nullable=True)
+
 

@@ -7,7 +7,7 @@ import json
 import hashlib
 from app.database import get_db
 from app.services.payment_service import transition_payment
-from app.model import Payment,IdempotencyKey,PaymentStatusHistory, Users,UserRoles
+from app.model import Payment,IdempotencyKey,PaymentStatusHistory, User,UserRoles
 from app.utils.security import get_current_user, requires_admin
 from uuid import UUID
 from app.messaging.publisher import send_process_payment_message
@@ -15,7 +15,7 @@ from app.messaging.publisher import send_process_payment_message
 router = APIRouter(prefix="/api/v1/payments",tags=["payments"])
 
 @router.get("/get/{payment_id}",response_model=PaymentResponse)
-def get_payment(payment_id: UUID,db: Session = Depends(get_db),current_user: Users = Depends(get_current_user)):
+def get_payment(payment_id: UUID,db: Session = Depends(get_db),current_user: User = Depends(get_current_user)):
 
     payment = db.scalar(select(Payment).where(Payment.payment_id == payment_id))
 
@@ -38,7 +38,7 @@ def get_payment(payment_id: UUID,db: Session = Depends(get_db),current_user: Use
 def create_payment(payment: PaymentRequest, 
                    db: Session = Depends(get_db), 
                    idempotency_key: str = Header(...),
-                   current_user: Users = Depends(get_current_user)):
+                   current_user: User = Depends(get_current_user)):
 
     new_payment = Payment(
                     user_id=current_user.user_id,
@@ -103,7 +103,7 @@ def create_payment(payment: PaymentRequest,
 @router.patch("/{payment_id}/status",response_model=PaymentResponse)
 def update_payment_status(payment_id: UUID,request: PaymentStatusUpdate,
                           db: Session = Depends(get_db),
-                          current_user: Users = Depends(requires_admin)):
+                          current_user: User = Depends(requires_admin)):
 
     # Lock payment row until a transaction finishes
     payment = db.execute(select(Payment).where(Payment.payment_id == payment_id).with_for_update()).scalar_one_or_none()

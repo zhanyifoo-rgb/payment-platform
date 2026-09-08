@@ -4,7 +4,7 @@ from jose import jwt, JWTError
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from app.config import settings
-from app.model import Users
+from app.model import User
 from app.schemas import UserRoles
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -63,14 +63,14 @@ def get_current_user(token: str = Depends(oauth2_schema), db: Session = Depends(
     except (JWTError, ValueError):
         raise credentials_exception
 
-    user = db.scalar(select(Users).where(Users.user_id == user_id))
+    user = db.scalar(select(User).where(User.user_id == user_id))
 
     if not user:
         raise credentials_exception
 
     return user
 
-def requires_admin(current_user: Users = Depends(get_current_user)):
+def requires_admin(current_user: User = Depends(get_current_user)):
 
     if current_user.role is not UserRoles.ADMIN:
         raise HTTPException(

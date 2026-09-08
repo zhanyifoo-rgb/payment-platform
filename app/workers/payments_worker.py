@@ -1,7 +1,7 @@
 from app.messaging.rabbitmq import channel
 from sqlalchemy import select
 from app.database import SessionLocal
-from app.model import Payment,PaymentStatus,PaymentStatusHistory
+from app.model import Payment,PaymentStatus,PaymentStatusHistory, OutboxEvent
 from app.routers.payments import transition_payment
 import random
 import time
@@ -26,31 +26,46 @@ def on_message_received(ch,method,properties,body):
         processed = False
 
         if old_status == PaymentStatus.PENDING:
-            transition_payment(payment, PaymentStatus.PROCESSING)
+            with db.begin():
+                transition_payment(payment, PaymentStatus.PROCESSING)
+                
+                new_payment_status_history = PaymentStatusHistory(
+                        payment_id = payment_id,
+                        old_status = old_status,
+                        new_status = payment.payment_status
+                    )
+    
+                db.add(new_payment_status_history)
+    
+                # wait for processing time
+                time.sleep(random.randint(1,4))
+    
+                old_status = payment.payment_status
+                transition_payment(payment, PaymentStatus.SUCCEEDED)
+                
+                new_payment_status_history = PaymentStatusHistory(
+                        payment_id = payment_id,
+                        old_status = old_status,
+                        new_status = payment.payment_status
+                    )
+    
+                db.add(new_payment_status_history)
 
-            new_payment_status_history = PaymentStatusHistory(
-                    payment_id = payment_id,
-                    old_status = old_status,
-                    new_status = payment.payment_status
+                new_outbox_event = OutboxEvent(
+                    event_type = "PaymentStatusChanged",
+                    aggregate_id = str(payment_id),
+                    payload = {
+                        "payment_id": str(payment.payment_id),
+                        "customer_id": str(payment.user_id),
+                        "old_status": old_status.value,
+                        "new_status": payment.payment_status.value,
+                        "amount": str(payment.amount),
+                        "currency": payment.currency.value,
+                    }
                 )
 
-            db.add(new_payment_status_history)
+                db.add(new_outbox_event)
 
-            # wait for processing time
-            time.sleep(random.randint(1,4))
-
-            old_status = payment.payment_status
-            transition_payment(payment, PaymentStatus.SUCCEEDED)
-            
-            new_payment_status_history = PaymentStatusHistory(
-                    payment_id = payment_id,
-                    old_status = old_status,
-                    new_status = payment.payment_status
-                )
-
-            db.add(new_payment_status_history)
-
-            db.commit()
             processed = True
 
         if processed:
@@ -60,8 +75,7 @@ def on_message_received(ch,method,properties,body):
                         body=str(payment_id),
                         properties=pika.BasicProperties(
                             delivery_mode=pika.DeliveryMode.Persistent
-                        )
-                        )
+                        ))
         ch.basic_ack(delivery_tag=method.delivery_tag)
         
     except Exception:
@@ -72,5 +86,5 @@ def on_message_received(ch,method,properties,body):
         db.close()
 
 channel.queue_declare(queue="payment_processing_queue", durable = True)
-channel.basic_consume(queue='payment_processing_queue', auto_ack=False,on_message_callback=on_message_received)
+channel.basic_consume(queue='payment_processing_queue', auto_ack=False, on_message_callback=on_message_received)
 channel.start_consuming()
