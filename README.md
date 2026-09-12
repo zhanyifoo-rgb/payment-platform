@@ -1,180 +1,341 @@
-﻿# Payment Platform
+# Payment Platform
 
-A backend payment-processing simulation built with **FastAPI, PostgreSQL, SQLAlchemy, Alembic, RabbitMQ, and Docker**.
+A backend payment-processing simulation built with **FastAPI, PostgreSQL, SQLAlchemy, RabbitMQ, and Docker**.
 
-## Features
+The project focuses on reliable asynchronous payment processing and demonstrates backend engineering concepts such as **idempotency, state-machine validation, database transactions, row-level locking, message acknowledgements, retries with exponential backoff, dead-letter queues, publisher confirms, and the transactional outbox pattern**.
 
-* JWT authentication & role-based authorization
-* Payment creation and status management
-* Idempotency keys
+## Architecture
+
+```text
+                         ┌──────────────────┐
+                         │      Client      │
+                         └────────┬─────────┘
+                                  │
+                                  ▼
+                         ┌──────────────────┐
+                         │     FastAPI      │
+                         │  REST API / JWT  │
+                         └────────┬─────────┘
+                                  │
+                    ┌─────────────┴─────────────┐
+                    ▼                           ▼
+             ┌──────────────┐           ┌──────────────┐
+             │  PostgreSQL  │           │   RabbitMQ   │
+             │              │           │   Exchange   │
+             │ Payments     │           └──────┬───────┘
+             │ Users        │                  │
+             │ History      │                  │
+             │ Outbox       │                  ▼
+             └──────┬───────┘           ┌──────────────┐
+                    │                   │ Payment      │
+                    │                   │ Worker       │
+                    │                   └──────┬───────┘
+                    │                          │
+                    │                          │ Process
+                    │                          ▼
+                    │                   ┌──────────────┐
+                    └───────────────────│ PostgreSQL   │
+                                        └──────────────┘
+
+                         Transactional Outbox
+                                │
+                                ▼
+                         ┌──────────────┐
+                         │ Outbox       │
+                         │ Worker       │
+                         └──────┬───────┘
+                                │
+                                ▼
+                         ┌──────────────┐
+                         │   RabbitMQ   │
+                         │ Events / DLX  │
+                         └──────┬───────┘
+                                │
+                         ┌──────┴──────┐
+                         ▼             ▼
+                  Event Consumers   Payment DLQ
+```
+
+## Key Features
+
+### Authentication & Authorization
+
+* JWT authentication
+* Password hashing
+* Role-based access control
+* Customer, payment processor, and administrator roles
+* Protected endpoints
+
+### Payment Processing
+
+* Create and retrieve payments
+* Payment status management
+* Supported currencies:
+
+  * MYR
+  * USD
+  * SGD
+* Payment state machine
 * Payment status history
-* Asynchronous payment processing with RabbitMQ
-* PostgreSQL database
-* Alembic database migrations
-* Automated tests
+* UUID-based payment identifiers
 
-## Tech Stack
+### Idempotency
 
-* Python
-* FastAPI
-* PostgreSQL
-* SQLAlchemy
-* Alembic
-* RabbitMQ
-* Docker
-* Pytest
+Payment creation supports an **idempotency key** to prevent duplicate payment creation when clients retry the same request.
 
-## Getting Started
+If the same idempotency key is reused with a different request payload, the API rejects the request with a conflict response.
 
-### 1. Clone the repository
+This models an important requirement in real payment systems where clients may retry requests because of network failures or timeouts.
 
-```bash
-git clone https://github.com/zhanyifoo-rgb/payment-platform.git
-cd payment-platform
-```
+### Asynchronous Processing
 
-### 2. Create a virtual environment
+Payment processing is performed asynchronously using **RabbitMQ**.
 
-```bash
-python -m venv .venv
-```
-
-Activate it:
-
-**Windows**
-
-```bash
-.venv\Scripts\activate
-```
-
-**Linux / macOS**
-
-```bash
-source .venv/bin/activate
-```
-
-### 3. Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Start PostgreSQL and RabbitMQ
-
-Start the required Docker services:
-
-```bash
-docker compose up -d
-```
-
-Check that they are running:
-
-```bash
-docker ps
-```
-
-RabbitMQ Management UI:
+The API does not wait for the simulated payment processing to finish.
 
 ```text
-http://localhost:15672
-```
-
-### 5. Configure environment variables
-
-Create a `.env` file in the project root:
-
-```env
-DATABASE_URL=postgresql+psycopg://username:password@localhost:5432/paymentdb
-SECRET_KEY=your-secret-key
-RABBITMQ_HOST=localhost
-RABBITMQ_PORT=5672
-```
-
-Use the database credentials configured in your Docker Compose file.
-
-### 6. Run database migrations
-
-```bash
-alembic upgrade head
-```
-
-### 7. Start the FastAPI application
-
-Open **Terminal 1**:
-
-```bash
-uvicorn app.main:app --reload
-```
-
-API:
-
-```text
-http://localhost:8000
-```
-
-Swagger documentation:
-
-```text
-http://localhost:8000/docs
-```
-
-### 8. Start the payment worker
-
-Open **Terminal 2**:
-
-```bash
-python -m app.workers.payments_worker
-```
-
-You should see:
-
-```text
-Worker waiting for messages...
-```
-
-Keep the worker running while using the API.
-
-## Running the Application
-
-The payment flow is:
-
-```text
-Client
-  ↓
-FastAPI
-  ↓
-PostgreSQL
-  ↓
+POST /payments
+      │
+      ▼
+Create PENDING payment
+      │
+      ▼
+Publish processing event
+      │
+      ▼
+Return API response
+      │
+      ▼
 RabbitMQ
-  ↓
+      │
+      ▼
 Payment Worker
-  ↓
-PostgreSQL
+      │
+      ▼
+PROCESSING
+      │
+      ├───────────────┐
+      ▼               ▼
+  SUCCEEDED        FAILED
 ```
 
-When a payment is created, it starts as `pending`. The worker processes it asynchronously and updates the payment to `processing`, followed by `succeeded` or `failed`.
+This separates the API request lifecycle from background payment processing.
 
-## Run Tests
+## Payment State Machine
 
-```bash
-pytest
+Payments are protected by an explicit state-transition model.
+
+```text
+                 ┌─────────────┐
+                 │   PENDING   │
+                 └──────┬──────┘
+                        │
+                        ▼
+                 ┌─────────────┐
+                 │ PROCESSING  │
+                 └──────┬──────┘
+                    ┌───┴───┐
+                    ▼       ▼
+             ┌──────────┐ ┌──────────┐
+             │SUCCEEDED │ │  FAILED  │
+             └──────────┘ └──────────┘
+
+PENDING ───────────────► CANCELLED
 ```
 
-## Useful Commands
+Invalid transitions are rejected.
 
-Stop Docker services:
+For example:
 
-```bash
-docker compose down
+```text
+SUCCEEDED → PROCESSING    ❌
+FAILED → SUCCEEDED        ❌
+CANCELLED → SUCCEEDED     ❌
 ```
 
-View container logs:
+This prevents workers or API requests from accidentally overwriting terminal payment states.
 
-```bash
-docker compose logs
+## Concurrency Control
+
+Payment processing uses PostgreSQL row-level locking with:
+
+```python
+SELECT ... FOR UPDATE
 ```
 
-Run migrations:
+The worker uses short database transactions to claim and finalize payments.
+
+Database locks are not held while simulated processing or external operations are running.
+
+This helps prevent concurrent workers from processing the same payment state transition incorrectly.
+
+## RabbitMQ Retry System
+
+Temporary payment-processing failures are retried asynchronously.
+
+The retry system uses RabbitMQ TTL queues and dead-letter routing to implement exponential backoff.
+
+```text
+Temporary Failure
+       │
+       ▼
+  Retry Attempt 1
+       │
+      2s
+       │
+       ▼
+  Retry Attempt 2
+       │
+      4s
+       │
+       ▼
+  Retry Attempt 3
+       │
+      8s
+       │
+       ▼
+ Maximum Retries
+       │
+       ▼
+     FAILED
+```
+
+Retry queues:
+
+```text
+payment.retry.2s
+payment.retry.4s
+payment.retry.8s
+```
+
+Each retry message contains a retry counter:
+
+```json
+{
+    "payment_id": "...",
+    "retry_count": 2
+}
+```
+
+### Retry Classification
+
+Errors are classified into two categories:
+
+**Temporary errors**
+
+Examples:
+
+* transient processing failures
+* temporary downstream failures
+* recoverable infrastructure problems
+
+These can be retried.
+
+**Permanent errors**
+
+These are immediately finalized as `FAILED` without further retries.
+
+## Publisher Confirms
+
+RabbitMQ publisher confirms are used when publishing important messages.
+
+The publisher waits for RabbitMQ confirmation before acknowledging the original message where appropriate.
+
+This reduces the risk of:
+
+```text
+Publish retry
+      ↓
+Publish fails
+      ↓
+ACK original message
+      ↓
+Retry message lost
+```
+
+Persistent RabbitMQ messages are also used for important events.
+
+## Transactional Outbox
+
+The project uses the **transactional outbox pattern** to reliably publish payment status events.
+
+Instead of directly performing:
+
+```text
+Update database
+      +
+Publish RabbitMQ event
+```
+
+inside unrelated operations, the payment transaction records an outbox event in the same database transaction.
+
+```text
+┌─────────────────────────────┐
+│ PostgreSQL Transaction      │
+│                             │
+│ Update Payment              │
+│ Add Status History          │
+│ Create Outbox Event         │
+│                             │
+│ COMMIT                      │
+└──────────────┬──────────────┘
+               │
+               ▼
+        Outbox Worker
+               │
+               ▼
+           RabbitMQ
+```
+
+This prevents a successful database update from silently losing its corresponding event because RabbitMQ was temporarily unavailable.
+
+The outbox worker periodically finds unpublished events and publishes them.
+
+Events are marked as published only after successful message publication.
+
+### Delivery Semantics
+
+The outbox provides **at-least-once delivery**, rather than exactly-once delivery.
+
+If RabbitMQ accepts an event but the database update marking the event as published fails, the event may be published again.
+
+Consumers should therefore be designed to handle duplicate events safely.
+
+Each outbox event has an `event_id` that can be used for deduplication.
+
+## Dead-Letter Queue
+
+Messages that cannot be successfully processed after the configured retry attempts are represented as failed payment events.
+
+The architecture uses a RabbitMQ dead-letter exchange:
+
+```text
+payments.dlx
+       │
+       ▼
+payment.dlq
+```
+
+The payment worker is responsible for payment state changes.
+
+The outbox worker is responsible for publishing durable payment events.
+
+This keeps database state management separate from message delivery.
+
+## Database
+
+PostgreSQL stores:
+
+* Users
+* Roles
+* Payments
+* Payment status history
+* Idempotency records
+* Outbox events
+
+Database schema changes are managed using **Alembic migrations**.
+
+Example:
 
 ```bash
 alembic upgrade head
@@ -183,5 +344,5 @@ alembic upgrade head
 Create a migration:
 
 ```bash
-alembic revision --autogenerate -m "description"
+alembic r
 ```
