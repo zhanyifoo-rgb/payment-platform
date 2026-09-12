@@ -6,6 +6,7 @@ import pika
 from datetime import datetime, timezone
 import time
 import json
+from app.schemas import PaymentStatus
 
 def process_outbox():
     while True:
@@ -14,18 +15,31 @@ def process_outbox():
             
             for event in unpublished_events:
                 try:
-                    channel.basic_publish(
-                            exchange="payments",
-                            routing_key=f"payment.{event.payload['new_status']}",
-                            body=json.dumps({
-                                "event_id": event.event_id,
-                                "event_type": event.event_type,
-                                "aggregate_id": event.aggregate_id,
-                                "payload" : event.payload
-                                }),
-                            properties=pika.BasicProperties(
-                                delivery_mode=pika.DeliveryMode.Persistent
-                            ))
+                    new_status = event.payload["new_status"]
+                    messages = json.dumps({
+                                    "event_id": event.event_id,
+                                    "event_type": event.event_type,
+                                    "aggregate_id": event.aggregate_id,
+                                    "payload" : event.payload
+                                    })
+
+                    if new_status == PaymentStatus.SUCCEEDED.value:
+                        channel.basic_publish(
+                                exchange="payments",
+                                routing_key=f"payment.{event.payload['new_status']}",
+                                body=messages,
+                                properties=pika.BasicProperties(
+                                    delivery_mode=pika.DeliveryMode.Persistent
+                                ))
+                    elif new_status == PaymentStatus.FAILED.value:
+                        channel.basic_publish(
+                                exchange="payments.dlx",
+                                routing_key="payment.failed",
+                                body=messages,
+                                properties=pika.BasicProperties(
+                                    delivery_mode=pika.DeliveryMode.Persistent
+                                )
+                            )
     
                     event.published_at = datetime.now(timezone.utc)
 
