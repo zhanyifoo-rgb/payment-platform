@@ -20,11 +20,11 @@ class Payment(Base):
     payment_status: Mapped[PaymentStatus] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),default=lambda : datetime.now(timezone.utc),nullable=False)
 
-    idempotency = relationship("IdempotencyKey", back_populates="payment")
+    idempotency = relationship("IdempotencyKey", back_populates="payment",uselist=False)
     payment_status_history = relationship("PaymentStatusHistory", back_populates="payment")
     user = relationship(
-    "Users",
-    back_populates="payment"
+    "User",
+    back_populates="payments"
 )
 
 class IdempotencyKey(Base):
@@ -55,7 +55,7 @@ class User(Base):
     username: Mapped[str] = mapped_column(unique=True,nullable=False)
     password_hash: Mapped[str] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),default=lambda : datetime.now(timezone.utc),nullable=False)
-    role: Mapped[UserRoles] = mapped_column(nullable=False)
+    role: Mapped[UserRoles] = mapped_column(nullable=False, default=UserRoles.CUSTOMER)
 
     payments = relationship(
         "Payment",
