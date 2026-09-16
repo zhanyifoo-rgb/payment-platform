@@ -17,20 +17,20 @@ services:
       timeout: 5s
       retries: 5
 
-  rabbitmq:
-    image: rabbitmq:4-management
-    container_name: payment-rabbitmq
-    restart: unless-stopped
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  # rabbitmq:
+  #   image: rabbitmq:4-management
+  #   container_name: payment-rabbitmq
+  #   restart: unless-stopped
+  #   ports:
+  #     - "5672:5672"
+  #     - "15672:15672"
+  #   volumes:
+  #     - rabbitmq_data:/var/lib/rabbitmq
+  #   healthcheck:
+  #     test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
 
   api:
     build: .
@@ -43,40 +43,53 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
+      # rabbitmq:
+      #   condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')"]
       interval: 30s
       timeout: 5s
       retries: 3
   
-  payment-worker:
+  workers:
     build: .
-    container_name: payment-worker
+    container_name: workers
     restart: unless-stopped
     env_file:
       - .env
-    command: ["python", "-m", "app.workers.payments_worker"]
+    command: ["python", "-m", "app.workers.run_workers"]
     depends_on:
       postgres:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
+      # rabbitmq:
+      #   condition: service_healthy
 
-  outbox-worker:
-    build: .
-    container_name: outbox-worker
-    restart: unless-stopped
-    env_file:
-      - .env
-    command: ["python", "-m", "app.workers.outboxs_worker"]
-    depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
+  # payment-worker:
+  #   build: .
+  #   container_name: payment-worker
+  #   restart: unless-stopped
+  #   env_file:
+  #     - .env
+  #   command: ["python", "-m", "app.workers.payments_worker"]
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     rabbitmq:
+  #       condition: service_healthy
+
+  # outbox-worker:
+  #   build: .
+  #   container_name: outbox-worker
+  #   restart: unless-stopped
+  #   env_file:
+  #     - .env
+  #   command: ["python", "-m", "app.workers.outboxs_worker"]
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     rabbitmq:
+  #       condition: service_healthy
 
 volumes:
   postgres_data:
-  rabbitmq_data:
+  # rabbitmq_data:
