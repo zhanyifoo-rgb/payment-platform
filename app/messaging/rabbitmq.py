@@ -109,7 +109,3 @@ def setup_rabbitmq(channel):
         exchange="payments.dlx",
         routing_key="payment.failed"
     )
-
-channel = create_connection().channel()
-channel.confirm_delivery()
-setup_rabbitmq(channel)
