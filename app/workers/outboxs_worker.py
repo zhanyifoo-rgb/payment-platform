@@ -1,5 +1,5 @@
 from app.database import SessionLocal
-from app.messaging.rabbitmq import create_connection
+from app.messaging.rabbitmq import create_connection, setup_rabbitmq
 from sqlalchemy import select
 from app.model import OutboxEvent
 import pika
@@ -12,12 +12,21 @@ def process_outbox():
     connection = create_connection()
     channel = connection.channel() 
 
+    channel.confirm_delivery()
+    setup_rabbitmq(channel)
+
+    print("Outbox worker started")
+
     while True:
         with SessionLocal() as db:
             unpublished_events = db.scalars(select(OutboxEvent).where(OutboxEvent.event_type == "PaymentStatusChanged",OutboxEvent.published_at.is_(None)).limit(100)).all()
             
             for event in unpublished_events:
                 try:
+                    print(f"RabbitMQ connection open: {connection.is_open}, "
+                            f"channel open: {channel.is_open}"
+                            )              
+
                     new_status = event.payload["new_status"]
                     messages = json.dumps({
                                     "event_id": event.event_id,
