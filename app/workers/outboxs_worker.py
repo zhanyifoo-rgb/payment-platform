@@ -14,7 +14,7 @@ def process_outbox():
 
     setup_rabbitmq(channel)
 
-    print("Outbox worker started")
+    print("Outbox worker started", flush=True)
 
     while True:
         with SessionLocal() as db:
@@ -52,7 +52,7 @@ def process_outbox():
 
                     db.commit()
 
-                    print(f"Event {event.event_id} published")
+                    print(f"Event {event.event_id} published", flush=True)
 
                 except Exception as e:
                     db.rollback()
