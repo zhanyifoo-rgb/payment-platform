@@ -9,57 +9,68 @@ import json
 from app.schemas import PaymentStatus
 
 def process_outbox():
+    print("1. Starting outbox worker", flush=True)
+
     connection = create_connection()
-    channel = connection.channel() 
+    print("2. RabbitMQ connection created", flush=True)
 
-    channel.confirm_delivery()
+    channel = connection.channel()
+    print("3. RabbitMQ channel created", flush=True)
+
     setup_rabbitmq(channel)
-
-    print("Outbox worker started")
+    print("4. RabbitMQ setup complete", flush=True)
 
     while True:
+        print("5. Checking outbox", flush=True)
+
         with SessionLocal() as db:
-            unpublished_events = db.scalars(select(OutboxEvent).where(OutboxEvent.event_type == "PaymentStatusChanged",OutboxEvent.published_at.is_(None)).limit(100)).all()
-            
+            unpublished_events = db.scalars(
+                select(OutboxEvent)
+                .where(
+                    OutboxEvent.event_type == "PaymentStatusChanged",
+                    OutboxEvent.published_at.is_(None)
+                )
+                .limit(100)
+            ).all()
+
+            print(
+                f"6. Found {len(unpublished_events)} unpublished events",
+                flush=True
+            )
+
             for event in unpublished_events:
                 try:
-                    print(f"RabbitMQ connection open: {connection.is_open}, "
-                            f"channel open: {channel.is_open}"
-                            )              
+                    print(
+                        f"7. Publishing {event.event_id}",
+                        flush=True
+                    )
 
-                    new_status = event.payload["new_status"]
-                    messages = json.dumps({
-                                    "event_id": event.event_id,
-                                    "event_type": event.event_type,
-                                    "aggregate_id": event.aggregate_id,
-                                    "payload" : event.payload
-                                    })
+                    channel.basic_publish(
+                        exchange="payments",
+                        routing_key=event.routing_key,
+                        body=json.dumps(event.payload),
+                    )
 
-                    if new_status == PaymentStatus.SUCCEEDED.value:
-                        channel.basic_publish(
-                                exchange="payments",
-                                routing_key=f"payment.{event.payload['new_status']}",
-                                body=messages,
-                                properties=pika.BasicProperties(
-                                    delivery_mode=pika.DeliveryMode.Persistent
-                                ))
-                    elif new_status == PaymentStatus.FAILED.value:
-                        channel.basic_publish(
-                                exchange="payments.dlx",
-                                routing_key="payment.failed",
-                                body=messages,
-                                properties=pika.BasicProperties(
-                                    delivery_mode=pika.DeliveryMode.Persistent
-                                )
-                            )
-    
+                    print(
+                        f"8. Published {event.event_id}",
+                        flush=True
+                    )
+
                     event.published_at = datetime.now(timezone.utc)
-
                     db.commit()
 
+                    print(
+                        f"9. Marked {event.event_id} as published",
+                        flush=True
+                    )
+
                 except Exception as e:
+                    print(
+                        f"ERROR publishing {event.event_id}: "
+                        f"{type(e).__name__}: {e}",
+                        flush=True
+                    )
                     db.rollback()
-                    print(f"Failed to publish event {event.event_id}: {e}")
 
         time.sleep(5)
 
