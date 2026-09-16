@@ -1,11 +1,10 @@
 import json 
 import pika 
 from app.config import settings 
-from app.messaging.rabbitmq import setup_rabbitmq
+from app.messaging.rabbitmq import setup_rabbitmq, create_connection
 
 def send_process_payment_message(payment_id: str): 
-    params = pika.URLParameters(settings.rabbitmq_url) 
-    connection = pika.BlockingConnection(params) 
+    connection = create_connection()
     channel = connection.channel() 
 
     try: 
@@ -21,4 +20,5 @@ def send_process_payment_message(payment_id: str):
                 "retry_count": 0 }), 
             properties=pika.BasicProperties( delivery_mode=pika.DeliveryMode.Persistent ) ) 
 
-    finally: connection.close()
+    finally: 
+        connection.close()

@@ -1,7 +1,7 @@
-from app.messaging.rabbitmq import channel
+from app.messaging.rabbitmq import create_connection
 from sqlalchemy import select
 from app.database import SessionLocal
-from app.model import Payment,PaymentStatus,PaymentStatusHistory, OutboxEvent
+from app.model import Payment,PaymentStatus,PaymentStatusHistory
 from app.services.payment_service import process_payment,transition_payment, finalize_payment
 from uuid import UUID
 import pika
@@ -75,7 +75,7 @@ def on_message_received(ch,method,properties,body):
 
             if retry_count < max_retry_count:
                 try:
-                    channel.basic_publish(exchange='payments', routing_key=retry_queues[retry_count],body=json.dumps({
+                    ch.basic_publish(exchange='payments', routing_key=retry_queues[retry_count],body=json.dumps({
                                     "payment_id": str(payment_id),
                                     "retry_count": retry_count + 1
                                 }),
@@ -107,7 +107,16 @@ def on_message_received(ch,method,properties,body):
             finalize_payment(payment_id,PaymentStatus.SUCCEEDED)
                                 
             ch.basic_ack(delivery_tag=method.delivery_tag)
-            
-channel.queue_declare(queue="payment_processing_queue", durable = True)
-channel.basic_consume(queue='payment_processing_queue', auto_ack=False, on_message_callback=on_message_received)
-channel.start_consuming()
+
+def main():
+    connection = create_connection()
+    channel = connection.channel() 
+
+    channel.basic_qos(prefetch_count=1)
+
+    channel.queue_declare(queue="payment_processing_queue", durable = True)
+    channel.basic_consume(queue='payment_processing_queue', auto_ack=False, on_message_callback=on_message_received)
+    channel.start_consuming()
+
+if __name__ == "__main__":
+    main()

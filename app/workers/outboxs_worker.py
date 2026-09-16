@@ -1,5 +1,5 @@
 from app.database import SessionLocal
-from app.messaging.rabbitmq import channel
+from app.messaging.rabbitmq import create_connection
 from sqlalchemy import select
 from app.model import OutboxEvent
 import pika
@@ -9,6 +9,9 @@ import json
 from app.schemas import PaymentStatus
 
 def process_outbox():
+    connection = create_connection()
+    channel = connection.channel() 
+
     while True:
         with SessionLocal() as db:
             unpublished_events = db.scalars(select(OutboxEvent).where(OutboxEvent.event_type == "PaymentStatusChanged",OutboxEvent.published_at.is_(None)).limit(100)).all()
