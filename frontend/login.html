@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign in — Tunai</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --brand: #10312f;
+      --brand-soft: #1c4a46;
+      --paper: #ffffff;
+      --surface: #f3f5f3;
+      --ink: #14201e;
+      --muted: #5e6e6b;
+      --rule: #dbe2df;
+      --field: #ffffff;
+      --amber: #c98a2b;
+      --danger: #9b3122;
+      --on-brand: #eaf1ee;
+      --font: "Archivo", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --r: 10px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --brand: #0b2422;
+        --brand-soft: #163b38;
+        --paper: #111917;
+        --surface: #0d1514;
+        --ink: #e6edea;
+        --muted: #8c9a96;
+        --rule: #26332f;
+        --field: #18211f;
+        --amber: #e0ae5c;
+        --danger: #e08776;
+        --on-brand: #dce9e4;
+        --red: #c62828;
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --brand: #0b2422;
+      --brand-soft: #163b38;
+      --paper: #111917;
+      --surface: #0d1514;
+      --ink: #e6edea;
+      --muted: #8c9a96;
+      --rule: #26332f;
+      --field: #18211f;
+      --amber: #e0ae5c;
+      --danger: #e08776;
+      --on-brand: #dce9e4;
+      --red: #c62828;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--font);
+      font-size: 16px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--amber);
+      outline-offset: 2px;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 1.05fr 1fr;
+      min-height: 100%;
+    }
+
+    /* ---------- brand side ---------- */
+    .aside {
+      background: var(--brand);
+      color: var(--on-brand);
+      padding: clamp(2rem, 4vw, 3rem);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 3rem;
+    }
+
+    .mark {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      font-size: 3rem;
+    }
+
+    .mark span.glyph {
+      width: 46px;
+      height: 46px;
+      border-radius: 7px;
+      background: var(--amber);
+      display: grid;
+      place-items: center;
+      color: #10312f;
+      font-size: 1.8125rem;
+      font-weight: 700;
+    }
+
+    .pitch {
+      font-size: clamp(1.75rem, 3.4vw, 2.5rem);
+      line-height: 1.12;
+      letter-spacing: -0.025em;
+      font-weight: 600;
+      margin: 0 0 1rem;
+      max-width: 15ch;
+      text-wrap: balance;
+    }
+
+    .pitch-sub {
+      margin: 0;
+      color: #a9c0b9;
+      max-width: 38ch;
+      font-size: 0.9375rem;
+    }
+
+    .receipt {
+      background: var(--brand-soft);
+      border-radius: var(--r);
+      padding: 1.25rem 1.25rem 1rem;
+      max-width: 340px;
+      width: 100%;
+    }
+
+    .receipt-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 0.8125rem;
+      color: #a9c0b9;
+      margin-bottom: 0.35rem;
+    }
+
+    .amount {
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.1;
+    }
+
+    .receipt-to {
+      font-size: 0.9375rem;
+      color: #a9c0b9;
+      margin: 0.15rem 0 1rem;
+    }
+
+    .receipt-line {
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      padding-top: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8125rem;
+      color: #a9c0b9;
+    }
+
+    .receipt-line b {
+      color: var(--amber);
+      font-weight: 500;
+    }
+
+    .trust {
+      font-size: 0.8125rem;
+      color: #8fa9a2;
+      margin: 0;
+    }
+
+    /* ---------- form side ---------- */
+    .panel {
+      padding: clamp(2rem, 4vw, 3.5rem);
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      background: var(--paper);
+    }
+
+    .form-wrap {
+      width: 100%;
+      max-width: 400px;
+    }
+
+    /* The two panels stack in the same box; JS measures the active
+       one's real height and animates the box to match, so switching
+       tabs never causes a layout jump regardless of browser quirks. */
+    .panel-stack {
+      position: relative;
+      overflow: hidden;
+      margin: 0 -6px;
+      padding: 0 6px;
+      transition: height 240ms cubic-bezier(0.2, 0.7, 0.3, 1);
+    }
+
+    .panel-stack>section {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      transition: opacity 160ms ease;
+    }
+
+    .panel-stack>section[hidden] {
+      display: block !important;
+      visibility: visible;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .panel-stack>section:not([hidden]) {
+      opacity: 1;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--surface);
+      border-radius: var(--r);
+      padding: 4px;
+      margin-bottom: 2rem;
+    }
+
+    .tab {
+      appearance: none;
+      border: 0;
+      background: none;
+      font: inherit;
+      font-weight: 500;
+      font-size: 0.9375rem;
+      color: var(--muted);
+      padding: 0.6rem;
+      border-radius: 7px;
+      cursor: pointer;
+      transition:
+        background 160ms ease,
+        color 160ms ease;
+    }
+
+    .tab[aria-selected="true"] {
+      background: var(--paper);
+      color: var(--ink);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      letter-spacing: -0.02em;
+      font-weight: 600;
+      margin: 0 0 0.35rem;
+    }
+
+    .sub {
+      margin: 0 0 1.75rem;
+      color: var(--muted);
+      font-size: 0.9375rem;
+    }
+
+    .field {
+      margin-bottom: 1rem;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 0.35rem;
+    }
+
+    .control {
+      position: relative;
+      display: flex;
+    }
+
+    input {
+      width: 100%;
+      font: inherit;
+      font-size: 0.9375rem;
+      padding: 0.75rem 0.85rem;
+      background: var(--field);
+      color: var(--ink);
+      border: 1px solid var(--rule);
+      border-radius: var(--r);
+    }
+
+    input::placeholder {
+      color: #9aa8a4;
+    }
+
+    input:focus {
+      border-color: var(--brand-soft);
+      outline: 2px solid var(--red);
+      outline-offset: 1px;
+    }
+
+    input[aria-invalid="true"] {
+      border-color: var(--danger);
+    }
+
+    .peek {
+      position: absolute;
+      right: 0.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      appearance: none;
+      border: 0;
+      background: none;
+      font: inherit;
+      font-size: 0.8125rem;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 0.3rem 0.4rem;
+      border-radius: 6px;
+    }
+
+    .hint {
+      font-size: 0.8125rem;
+      color: var(--muted);
+      margin: 0.35rem 0 0;
+    }
+
+    .error {
+      font-size: 0.8125rem;
+      color: var(--danger);
+      margin: 0.35rem 0 0;
+      display: none;
+    }
+
+    .error[data-shown="true"] {
+      display: block;
+    }
+
+    .row-between {
+      display: flex;
+      justify-content: flex-end;
+      margin: -0.35rem 0 1.25rem;
+    }
+
+    .link {
+      color: var(--brand-soft);
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      text-decoration-thickness: 1px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) .link {
+        color: var(--amber);
+      }
+    }
+
+    :root[data-theme="dark"] .link {
+      color: var(--amber);
+    }
+
+    .submit {
+      width: 100%;
+      appearance: none;
+      border: 0;
+      background: var(--brand);
+      color: #f1f7f4;
+      font: inherit;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      padding: 0.85rem;
+      border-radius: var(--r);
+      cursor: pointer;
+      transition: background 140ms ease;
+    }
+
+    .submit:hover {
+      background: var(--brand-soft);
+    }
+
+    .terms {
+      font-size: 0.8125rem;
+      color: var(--muted);
+      margin: 1rem 0 0;
+    }
+
+    .terms a {
+      color: inherit;
+    }
+
+    .notice {
+      margin-top: 1.25rem;
+      font-size: 0.875rem;
+      background: var(--surface);
+      border-left: 2px solid var(--amber);
+      padding: 0.75rem 0.9rem;
+      border-radius: 0 8px 8px 0;
+      color: var(--muted);
+      display: none;
+    }
+
+    .notice[data-shown="true"] {
+      display: block;
+    }
+
+    @media (max-width: 860px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .panel {
+        order: 1;
+        padding-top: 2.25rem;
+      }
+
+      .aside {
+        order: 2;
+        gap: 2rem;
+      }
+
+      .receipt {
+        max-width: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        transition-duration: 0.01ms !important;
+      }
+
+      .panel-stack {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="shell">
+    <aside class="aside">
+      <div class="mark">
+        <span class="glyph" aria-hidden="true">T</span>Tunai
+      </div>
+
+      <div>
+        <h2 class="pitch">Money moves the moment you send it.</h2>
+        <p class="pitch-sub">
+          Transfers between Tunai accounts settle instantly, and every one
+          leaves a receipt you can check.
+        </p>
+      </div>
+
+      <div class="receipt" aria-hidden="true">
+        <div class="receipt-top">
+          <span>Sent</span><span>Today, 9:42 AM</span>
+        </div>
+        <div class="amount">RM 240.00</div>
+        <p class="receipt-to">to Phillip Young</p>
+        <div class="receipt-line">
+          <span>Arrived in</span><b>1.2 seconds</b>
+        </div>
+      </div>
+
+      <p class="trust">
+        Licensed e-money issuer. Balances held in a segregated trust account.
+      </p>
+    </aside>
+
+    <main class="panel">
+      <div class="form-wrap">
+        <div class="tabs" role="tablist" aria-label="Sign in or create an account">
+          <button class="tab" role="tab" id="tab-signin" aria-controls="form-signin" aria-selected="true" type="button">
+            Sign in
+          </button>
+          <button class="tab" role="tab" id="tab-register" aria-controls="form-register" aria-selected="false"
+            type="button">
+            Create account
+          </button>
+        </div>
+
+        <div class="panel-stack" id="panel-stack">
+          <!-- SIGN IN -->
+          <section id="form-signin" role="tabpanel" aria-labelledby="tab-signin">
+            <h1>Welcome back</h1>
+            <p class="sub">Sign in to send money and check your balance.</p>
+
+            <div class="field">
+              <label for="si-username">Username</label>
+              <div class="control">
+                <input id="si-username" type="text" autocomplete="username" placeholder="username" />
+              </div>
+              <p class="error" id="si-username-err">
+                Enter username.
+              </p>
+            </div>
+
+            <div class="field">
+              <label for="si-pass">Password</label>
+              <div class="control">
+                <input id="si-pass" type="password" autocomplete="current-password" placeholder="password" />
+                <button class="peek" type="button" data-target="si-pass" aria-label="Show password">
+                  Show
+                </button>
+              </div>
+              <p class="error" id="si-pass-err">Enter your password.</p>
+            </div>
+
+            <div class="row-between">
+              <a class="link" href="#">Forgot password?</a>
+            </div>
+
+            <button class="submit" type="button" data-form="signin">
+              Sign in
+            </button>
+            <p class="notice" id="si-notice">
+              This is a front-end demo — there's no account system behind it
+              yet.
+            </p>
+          </section>
+
+          <!-- REGISTER -->
+          <section id="form-register" role="tabpanel" aria-labelledby="tab-register" hidden>
+            <h1>Create your account</h1>
+            <p class="sub">
+              Takes about a minute. You'll verify your identity before your
+              first transfer.
+            </p>
+
+            <div class="field">
+              <label for="re-username">Username</label>
+              <div class="control">
+                <input id="re-username" type="text" autocomplete="name" placeholder="username" />
+              </div>
+              <p class="error" id="re-username-err">Enter a username.</p>
+            </div>
+
+            <div class="field">
+              <label for="re-email">Email</label>
+              <div class="control">
+                <input id="re-email" type="email" autocomplete="email" placeholder="you@example.com" />
+              </div>
+              <p class="error" id="re-email-err">
+                Enter an email address, eg. you@example.com.
+              </p>
+            </div>
+
+            <div class="field">
+              <label for="re-phone">Mobile number</label>
+              <div class="control">
+                <input id="re-phone" type="tel" autocomplete="tel" placeholder="+60 12-345 6789" />
+              </div>
+              <p class="error" id="re-phone-err">
+                Enter your mobile number.
+              </p>
+            </div>
+
+            <div class="field">
+              <label for="re-pass">Password</label>
+              <div class="control">
+                <input id="re-pass" type="password" autocomplete="new-password" placeholder="At least 10 characters" />
+                <button class="peek" type="button" data-target="re-pass" aria-label="Show password">
+                  Show
+                </button>
+              </div>
+              <p class="hint">
+                Use at least 10 characters. A short phrase works better than a
+                scrambled word.
+              </p>
+              <p class="error" id="re-pass-err">
+                Password must be atleast 10 characters.
+              </p>
+            </div>
+
+            <button class="submit" type="button" data-form="register">
+              Create account
+            </button>
+            <p class="terms">
+              By creating an account you agree to the
+              <a href="#">Terms of Service</a> and
+              <a href="#">Privacy Policy</a>.
+            </p>
+            <p class="notice" id="re-notice">
+              This is a front-end demo — nothing is submitted or stored.
+            </p>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="./js/pages/login_page.js"></script>
+</body>
+
+</html>
