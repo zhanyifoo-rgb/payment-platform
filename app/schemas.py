@@ -44,6 +44,10 @@ class PaymentStatusUpdate(BaseModel):
 class UserRegister(BaseModel):
     username: str
     password: str
+    email: str
+    phone: str
+    firstname: str
+    lastname: str
 
 class UserResponse(BaseModel):
     user_id: UUID

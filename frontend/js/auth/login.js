@@ -2,6 +2,11 @@ import { show } from "../ui/validation.js";
 import { login } from "../api/auth.js";
 import { saveToken } from "./session.js";
 
+window.addEventListener("pageshow", () => {
+    document.getElementById("si-username").value = "";
+    document.getElementById("si-pass").value = "";
+});
+
 export async function handleSignIn() {
 
     const usernameInput =
@@ -58,7 +63,7 @@ export async function handleSignIn() {
 
         saveToken(data.access_token);
 
-        window.location.href = "/dashboard.html";
+        window.location.href = "./dashboard.html";
 
     } catch (error) {
 
@@ -67,5 +72,6 @@ export async function handleSignIn() {
         document
             .getElementById("si-notice")
             .setAttribute("data-shown", "true");
+
     }
 }

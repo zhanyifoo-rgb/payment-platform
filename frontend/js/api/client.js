@@ -1,6 +1,6 @@
-const API_URL = window.APP_CONFIG.API_URL;
+import { API_URL } from "../config.js";
 
-async function apiRequest(endpoint, options = {}) {
+export async function apiRequest(endpoint, options = {}) {
 
     const response = await fetch(`${API_URL}${endpoint}`, {
         ...options,
@@ -9,9 +9,9 @@ async function apiRequest(endpoint, options = {}) {
             ...options.headers
         }
     });
-
+    
     const data = await response.json();
-
+    console.log("API error:", data);
     if (!response.ok) {
         throw new Error(data.detail || "Request failed");
     }

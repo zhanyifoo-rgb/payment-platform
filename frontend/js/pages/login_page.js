@@ -21,3 +21,16 @@ document
 document
     .querySelector('[data-form="register"]')
     .addEventListener("click", handleRegistration);
+
+const registrationSuccess = sessionStorage.getItem("registrationSuccess");
+
+if (registrationSuccess) {
+    const notice = document.getElementById("si-notice");
+
+    notice.dataset.alertType = "success";
+    notice.textContent = "Registration successful.";
+    notice.dataset.shown = "true";
+
+    sessionStorage.removeItem("registrationSuccess");
+
+}

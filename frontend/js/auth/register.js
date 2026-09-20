@@ -11,33 +11,32 @@ export async function handleRegistration() {
 
     const usernameInput =
         document.getElementById("re-username");
-
+    const firstNameInput =
+        document.getElementById("re-firstname");
+    const lastNameInput =
+        document.getElementById("re-lastname");
     const emailInput =
         document.getElementById("re-email");
-
     const phoneInput =
         document.getElementById("re-phone");
-
     const passwordInput =
         document.getElementById("re-pass");
 
-
     const username =
         usernameInput.value.trim();
-
+    const firstName =
+        firstNameInput.value.trim();
+    const lastName =
+        lastNameInput.value.trim();
     const email =
         emailInput.value.trim();
-
     const phone =
         phoneInput.value.trim();
-
     const password =
         passwordInput.value;
 
-
     let valid = true;
     let firstInvalidInput = null;
-
 
     // Username
     const usernameValid =
@@ -53,7 +52,6 @@ export async function handleRegistration() {
             firstInvalidInput || usernameInput;
     }
 
-
     // Email
     const emailValid =
         isValidEmail(email);
@@ -67,7 +65,6 @@ export async function handleRegistration() {
         firstInvalidInput =
             firstInvalidInput || emailInput;
     }
-
 
     // Phone
     const phoneValid =
@@ -83,7 +80,6 @@ export async function handleRegistration() {
             firstInvalidInput || phoneInput;
     }
 
-
     // Password
     const passwordValid =
         password.length >= 10;
@@ -98,31 +94,28 @@ export async function handleRegistration() {
             firstInvalidInput || passwordInput;
     }
 
-
     // Focus the first invalid field
     if (firstInvalidInput) {
         firstInvalidInput.focus();
     }
-
 
     // Don't call the API if validation failed
     if (!valid) {
         return;
     }
 
-
     try {
-
-        await register(
+        await register({
             username,
             email,
             phone,
-            password
-        );
-
-        document
-            .getElementById("re-notice")
-            .setAttribute("data-shown", "true");
+            password,
+            firstName,
+            lastName
+        });
+        
+        sessionStorage.setItem("registrationSuccess", "true");
+        window.location.reload();
 
     } catch (error) {
 

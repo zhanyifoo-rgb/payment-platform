@@ -12,8 +12,7 @@ class Base(DeclarativeBase):
 class Payment(Base):
     __tablename__ = "payments"
 
-    id: Mapped[int]= mapped_column(primary_key=True)
-    payment_id: Mapped[pythonUUID] = mapped_column(UUID(as_uuid=True),default=uuid4, nullable = False, unique=True)
+    payment_id: Mapped[pythonUUID] = mapped_column(UUID(as_uuid=True),default=uuid4, primary_key=True)
     user_id: Mapped[pythonUUID] = mapped_column(UUID(as_uuid=True),ForeignKey("users.user_id"), nullable = False)
     amount: Mapped[Decimal] = mapped_column(Numeric(10,2), nullable = False)
     currency: Mapped[Currencies] = mapped_column(nullable = False)
@@ -53,6 +52,11 @@ class User(Base):
 
     user_id: Mapped[pythonUUID] = mapped_column(UUID(as_uuid=True),default=uuid4,primary_key=True)
     username: Mapped[str] = mapped_column(unique=True,nullable=False)
+    first_name: Mapped[str] = mapped_column(nullable=False)
+    last_name: Mapped[str] = mapped_column(nullable=False)
+    email: Mapped[str] = mapped_column(String(255),nullable=False, unique = True)
+    phone: Mapped[str] = mapped_column(String(20),nullable=False, unique = True)
+    available_balance: Mapped[Decimal] = mapped_column(Numeric(10,2), nullable = False, default=0)
     password_hash: Mapped[str] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),default=lambda : datetime.now(timezone.utc),nullable=False)
     role: Mapped[UserRoles] = mapped_column(nullable=False, default=UserRoles.CUSTOMER)

@@ -1,8 +1,8 @@
 """initial schema
 
-Revision ID: d65ea5dd6248
+Revision ID: b08965b9ac76
 Revises: 
-Create Date: 2026-09-15 18:54:39.709452
+Create Date: 2026-09-20 10:36:08.568567
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = 'd65ea5dd6248'
+revision: str = 'b08965b9ac76'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -33,14 +33,20 @@ def upgrade() -> None:
     op.create_table('users',
     sa.Column('user_id', sa.UUID(), nullable=False),
     sa.Column('username', sa.String(), nullable=False),
+    sa.Column('first_name', sa.String(), nullable=False),
+    sa.Column('last_name', sa.String(), nullable=False),
+    sa.Column('email', sa.String(length=255), nullable=False),
+    sa.Column('phone', sa.String(length=20), nullable=False),
+    sa.Column('available_balance', sa.Numeric(precision=10, scale=2), nullable=False),
     sa.Column('password_hash', sa.String(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('role', sa.Enum('CUSTOMER', 'PAYMENTPROCESSOR', 'ADMIN', name='userroles'), nullable=False),
     sa.PrimaryKeyConstraint('user_id'),
+    sa.UniqueConstraint('email'),
+    sa.UniqueConstraint('phone'),
     sa.UniqueConstraint('username')
     )
     op.create_table('payments',
-    sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('payment_id', sa.UUID(), nullable=False),
     sa.Column('user_id', sa.UUID(), nullable=False),
     sa.Column('amount', sa.Numeric(precision=10, scale=2), nullable=False),
@@ -48,8 +54,7 @@ def upgrade() -> None:
     sa.Column('payment_status', sa.Enum('PENDING', 'PROCESSING', 'SUCCEEDED', 'FAILED', 'CANCELLED', name='paymentstatus'), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.user_id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('payment_id')
+    sa.PrimaryKeyConstraint('payment_id')
     )
     op.create_table('idempotency_keys',
     sa.Column('id', sa.Integer(), nullable=False),
