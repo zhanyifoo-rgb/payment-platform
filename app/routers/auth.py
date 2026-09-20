@@ -47,7 +47,9 @@ def register(form_data: UserRegister, db: Session = Depends(get_db)):
             password_hash = hash_password(form_data.password),
             role = UserRoles.CUSTOMER,
             first_name = form_data.firstname,
-            last_name = form_data.lastname
+            last_name = form_data.lastname,
+            email = form_data.email,
+            phone = form_data.phone
         )
 
         db.add(new_user)

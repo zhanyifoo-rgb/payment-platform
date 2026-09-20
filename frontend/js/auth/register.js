@@ -24,9 +24,9 @@ export async function handleRegistration() {
 
     const username =
         usernameInput.value.trim();
-    const firstName =
+    const firstname =
         firstNameInput.value.trim();
-    const lastName =
+    const lastname =
         lastNameInput.value.trim();
     const email =
         emailInput.value.trim();
@@ -110,8 +110,8 @@ export async function handleRegistration() {
             email,
             phone,
             password,
-            firstName,
-            lastName
+            firstname,
+            lastname
         });
         
         sessionStorage.setItem("registrationSuccess", "true");
