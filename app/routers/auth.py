@@ -8,7 +8,7 @@ from app.schemas import UserRegister, UserRoles, UserResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.exc import IntegrityError
 from app.config import settings
-from app.utils.security import verify_password, create_access_token, hash_password, get_current_user
+from app.utils.security import verify_password, create_access_token, hash_password, get_current_user, generate_account_number
 
 router = APIRouter(prefix="/api/v1/auth",tags=["auth"])
 
@@ -39,6 +39,12 @@ def register(form_data: UserRegister, db: Session = Depends(get_db)):
                 status_code=409,
                 detail="Mobile number already exists."
             )
+
+    # Generate a unique account number:
+    account_number = generate_account_number()
+
+    while db.scalar(select(User).where(User.account_number == account_number)):
+        account_number = generate_account_number()
     
     # Try to register User
     try:
@@ -49,7 +55,8 @@ def register(form_data: UserRegister, db: Session = Depends(get_db)):
             first_name = form_data.firstname,
             last_name = form_data.lastname,
             email = form_data.email,
-            phone = form_data.phone
+            phone = form_data.phone,
+            account_number = account_number
         )
 
         db.add(new_user)
@@ -91,16 +98,16 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     }
 
 @router.get("/me")
-def get_my_profile(
-    current_user: User = Depends(get_current_user)
-):
+def get_my_profile(current_user: User = Depends(get_current_user)):
+    print(f"{current_user.first_name}")
     return {
         "username": current_user.username,
         "firstname": current_user.first_name,
         "lastname": current_user.last_name,
         "email": current_user.email,
         "phone": current_user.phone,
-        "available_balance": current_user.available_balance
+        "available_balance": current_user.available_balance,
+        "account_number": current_user.account_number
     }
 
 

@@ -51,6 +51,7 @@ class User(Base):
     __tablename__ = "users"
 
     user_id: Mapped[pythonUUID] = mapped_column(UUID(as_uuid=True),default=uuid4,primary_key=True)
+    account_number: Mapped[str] = mapped_column(String(12), unique = True, nullable = False)
     username: Mapped[str] = mapped_column(unique=True,nullable=False)
     first_name: Mapped[str] = mapped_column(nullable=False)
     last_name: Mapped[str] = mapped_column(nullable=False)

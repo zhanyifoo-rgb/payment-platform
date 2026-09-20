@@ -76,6 +76,7 @@
     }
 
     body {
+      visibility: hidden;
       margin: 0;
       background: var(--surface);
       color: var(--ink);
@@ -83,6 +84,10 @@
       font-size: 16px;
       line-height: 1.55;
       -webkit-font-smoothing: antialiased;
+    }
+
+    body.auth-checked {
+    visibility: visible;
     }
 
     :focus-visible {
@@ -577,7 +582,7 @@
         <div class="avatar user-initial" aria-hidden="true"></div>
         <div class="who">
           <b class="user-fullname"></b>
-          <span class="user-@fullname"></span>
+          <span class="user-handle"></span>
         </div>
         <button class="icon-btn" type="button" aria-label="Log out" style="margin-left:auto;background:transparent;border-color:rgba(255,255,255,0.2);color:var(--on-brand);">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke-linecap="round" stroke-linejoin="round" /><path d="M16 17l5-5-5-5M21 12H9" stroke-linecap="round" stroke-linejoin="round" /></svg>
@@ -600,7 +605,7 @@
         <div>
           <p class="label">Available balance</p>
           <div class="amount user-balance"></div>
-          <p class="acct">Tunai account •••• 7042</p>
+          <p class="acct user-accountNo"></p>
         </div>
         <div class="balance-actions">
           <button class="btn btn-ghost-on-brand" type="button">Top up</button>

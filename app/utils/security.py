@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.database import get_db
 from uuid import UUID
+import secrets
 
 def hash_password(user_input_password: str) -> str:
     password_hash = PasswordHash.recommended()
@@ -79,4 +80,7 @@ def requires_admin(current_user: User = Depends(get_current_user)):
         )
 
     return current_user
+
+def generate_account_number():
+    return "".join(str(secrets.randbelow(10)) for _ in range(12))
     

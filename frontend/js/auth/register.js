@@ -40,7 +40,7 @@ export async function handleRegistration() {
 
     // Username
     const usernameValid =
-        username.length > 1;
+        username.length > 0;
 
     if (!show(
         usernameInput,
@@ -50,6 +50,34 @@ export async function handleRegistration() {
         valid = false;
         firstInvalidInput =
             firstInvalidInput || usernameInput;
+    }
+
+    // First name
+    const firstNameValid =
+        firstname.length > 0;
+
+    if (!show(
+        firstNameInput,
+        "re-firstname-err",
+        firstNameValid
+    )) {
+        valid = false;
+        firstInvalidInput =
+            firstInvalidInput || firstNameInput;
+    }
+
+    // First name
+    const lastNameValid =
+        lastname.length > 0;
+
+    if (!show(
+        lastNameInput,
+        "re-lastname-err",
+        lastNameValid
+    )) {
+        valid = false;
+        firstInvalidInput =
+            firstInvalidInput || lastNameInput;
     }
 
     // Email

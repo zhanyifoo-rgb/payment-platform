@@ -32,10 +32,10 @@ export async function register(userData) {
 }
 
 export async function getCurrentUser() {
-    const token = localStorage.getItem("access_token");
+    const token = sessionStorage.getItem("access_token");
 
     const response = await fetch(
-        `${API_URL}/api/v1/users/me`,
+        `${API_URL}/auth/me`,
         {
             headers: {
                 Authorization: `Bearer ${token}`
@@ -51,3 +51,4 @@ export async function getCurrentUser() {
 
     return data;
 }
+
