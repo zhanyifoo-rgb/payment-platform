@@ -1,5 +1,5 @@
 from app.schemas import PaymentStatus
-from app.model import Payment, PaymentStatusHistory, OutboxEvent
+from app.model import Payment, PaymentStatusHistory, OutboxEvent, User
 import random
 import time
 from app.database import SessionLocal
@@ -53,6 +53,14 @@ def finalize_payment(payment_id: str, payment_status: PaymentStatus):
             
             current_payment_status = payment.payment_status
 
+            if payment_status == PaymentStatus.SUCCEEDED:
+                recipient = db.execute(select(User).where(User.account_number == payment.recipient_account_number).with_for_update()).scalar_one_or_none()
+
+                if recipient is None:
+                    raise ValueError("Recipient not found")
+        
+                recipient.available_balance += payment.amount
+
             transition_payment(payment, payment_status)
 
             new_payment_status_history = PaymentStatusHistory(
@@ -72,7 +80,8 @@ def finalize_payment(payment_id: str, payment_status: PaymentStatus):
                     "old_status": current_payment_status.value,
                     "new_status": payment.payment_status.value,
                     "amount": str(payment.amount),
-                    "currency": payment.currency.value
+                    "currency": payment.currency.value,
+                    "recipient_account_number": payment.recipient_account_number
                 }
             )
 

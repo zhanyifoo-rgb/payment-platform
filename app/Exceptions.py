@@ -7,3 +7,6 @@ class TemporaryPaymentError(Exception):
 
 class PermanentPaymentError(Exception):
     pass
+
+class InsufficientFundError(Exception):
+    pass

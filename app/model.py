@@ -18,6 +18,7 @@ class Payment(Base):
     currency: Mapped[Currencies] = mapped_column(nullable = False)
     payment_status: Mapped[PaymentStatus] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),default=lambda : datetime.now(timezone.utc),nullable=False)
+    recipient_account_number: Mapped[str] = mapped_column(String(12), nullable = False)
 
     idempotency = relationship("IdempotencyKey", back_populates="payment",uselist=False)
     payment_status_history = relationship("PaymentStatusHistory", back_populates="payment")

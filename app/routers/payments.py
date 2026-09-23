@@ -11,6 +11,7 @@ from app.model import Payment,IdempotencyKey,PaymentStatusHistory, User,UserRole
 from app.utils.security import get_current_user, requires_admin
 from uuid import UUID
 from app.messaging.publisher import send_process_payment_message
+from app.Exceptions import InsufficientFundError
 
 router = APIRouter(prefix="/api/v1/payments",tags=["payments"])
 
@@ -40,11 +41,23 @@ def create_payment(payment: PaymentRequest,
                    idempotency_key: str = Header(...),
                    current_user: User = Depends(get_current_user)):
 
+    recipient = db.scalar(select(User).where(User.account_number == payment.recipient_account_number))
+
+    if recipient is None:
+            raise HTTPException(
+            status_code=404,
+            detail="Recipient account not found"
+        )
+
+    if current_user.available_balance < payment.amount:
+        raise InsufficientFundError("Insufficient fund.") 
+
     new_payment = Payment(
                     user_id=current_user.user_id,
                     amount=payment.amount,
                     currency=payment.currency,
-                    payment_status = PaymentStatus.PENDING
+                    payment_status = PaymentStatus.PENDING,
+                    recipient_account_number = payment.recipient_account_number
                 )
 
     current_request_hash = create_request_hash(payment,current_user.user_id)
@@ -79,7 +92,8 @@ def create_payment(payment: PaymentRequest,
                         customer_id=current_payment.customer_id,
                         amount=current_payment.amount,
                         currency=current_payment.currency,
-                        status=current_payment.payment_status
+                        status=current_payment.payment_status,
+                        recipient_account_number = payment.recipient_account_number
                     )
 
             raise
@@ -97,7 +111,8 @@ def create_payment(payment: PaymentRequest,
                 user_id=new_payment.user_id,
                 amount=new_payment.amount,
                 currency=new_payment.currency,
-                status=new_payment.payment_status
+                status=new_payment.payment_status,
+                recipient_account_number = payment.recipient_account_number
             )
 
 @router.patch("/{payment_id}/status",response_model=PaymentResponse)
@@ -147,7 +162,8 @@ def update_payment_status(payment_id: UUID,request: PaymentStatusUpdate,
                 user_id=payment.user_id,
                 amount=payment.amount,
                 currency=payment.currency,
-                status=payment.payment_status
+                status=payment.payment_status,
+                recipient_account_number = payment.recipient_account_number
             )
 
 

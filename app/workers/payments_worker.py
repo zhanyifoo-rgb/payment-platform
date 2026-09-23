@@ -1,7 +1,7 @@
 from app.messaging.rabbitmq import create_connection
 from sqlalchemy import select
 from app.database import SessionLocal
-from app.model import Payment,PaymentStatus,PaymentStatusHistory
+from app.model import Payment,PaymentStatus,PaymentStatusHistory, User
 from app.services.payment_service import process_payment,transition_payment, finalize_payment
 from uuid import UUID
 import pika
@@ -14,6 +14,9 @@ def on_message_received(ch,method,properties,body):
     retry_count = message.get("retry_count",0)
     routing_key = method.routing_key
 
+    should_ack = False
+    should_nack = False
+
     # claim payment
     with SessionLocal() as db:
         with db.begin():
@@ -21,42 +24,43 @@ def on_message_received(ch,method,properties,body):
             payment = db.execute(select(Payment).where(Payment.payment_id == payment_id).with_for_update()).scalar_one_or_none()
 
             if payment is None:
-                ch.basic_nack(delivery_tag=method.delivery_tag,requeue=False)
-                return
-
-            current_payment_status = payment.payment_status
-
-            if routing_key == "payment.created":
-                # Prevent double message sent 
-                if current_payment_status != PaymentStatus.PENDING:
-                    ch.basic_ack(
-                        delivery_tag=method.delivery_tag
-                    )
-                    return
-                
-                transition_payment(payment, PaymentStatus.PROCESSING)
-                
-                new_payment_status_history = PaymentStatusHistory(
-                        payment_id = payment_id,
-                        old_status = current_payment_status,
-                        new_status = payment.payment_status
-                    )
-
-                db.add(new_payment_status_history)
-
-                current_payment_status = payment.payment_status
-
-            elif routing_key == "payment.retry":
-                # Prevent double message sent 
-                if current_payment_status != PaymentStatus.PROCESSING:
-                    ch.basic_ack(
-                        delivery_tag=method.delivery_tag
-                    )
-                    return
+                should_nack = True
 
             else:
-                ch.basic_nack(delivery_tag=method.delivery_tag,requeue=False)
-                return
+                current_payment_status = payment.payment_status
+
+                if routing_key == "payment.created":
+                    # Prevent double message sent 
+                    if current_payment_status != PaymentStatus.PENDING:
+                        should_ack = True
+                    else:
+                        transition_payment(payment, PaymentStatus.PROCESSING)
+                        
+                        new_payment_status_history = PaymentStatusHistory(
+                                payment_id = payment_id,
+                                old_status = current_payment_status,
+                                new_status = payment.payment_status
+                            )
+
+                        db.add(new_payment_status_history)
+
+                        current_payment_status = payment.payment_status
+
+                elif routing_key == "payment.retry":
+                    # Prevent double message sent 
+                    if current_payment_status != PaymentStatus.PROCESSING:
+                        should_ack = True
+                     
+                else:
+                    should_nack = True
+                    
+
+    if should_ack:
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+        return
+    elif should_nack:
+        ch.basic_nack(delivery_tag=method.delivery_tag,requeue=False)
+        return
 
     # Process payment
     if current_payment_status == PaymentStatus.PROCESSING:
@@ -101,11 +105,11 @@ def on_message_received(ch,method,properties,body):
             ch.basic_ack(delivery_tag=method.delivery_tag)
 
         except Exception:
-            ch.basic_nack(delivery_tag=method.delivery_tag,requeue=False)
+            ch.basic_nack(delivery_tag=method.delivery_tag,requeue=True)
 
         else:
             finalize_payment(payment_id,PaymentStatus.SUCCEEDED)
-                                
+
             ch.basic_ack(delivery_tag=method.delivery_tag)
 
 def main():

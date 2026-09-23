@@ -9,11 +9,15 @@ export async function apiRequest(endpoint, options = {}) {
             ...options.headers
         }
     });
-    
+
     const data = await response.json();
-    console.log("API error:", data);
+
     if (!response.ok) {
-        throw new Error(data.detail || "Request failed");
+        console.log("API response:", data);
+
+        const error = new Error(data.detail || "Request failed");
+        error.status = response.status;
+        throw error;
     }
 
     return data;

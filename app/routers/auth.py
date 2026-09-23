@@ -76,7 +76,8 @@ def register(form_data: UserRegister, db: Session = Depends(get_db)):
 
     return UserResponse(
          user_id=new_user.user_id,
-         username=new_user.username
+         username=new_user.username,
+         account_number=new_user.account_number
     )
 
 @router.post("/login")
@@ -109,5 +110,22 @@ def get_my_profile(current_user: User = Depends(get_current_user)):
         "available_balance": current_user.available_balance,
         "account_number": current_user.account_number
     }
+
+@router.get("/getuser/{account_number}",response_model=UserResponse)
+def get_payment(account_number: str,db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    
+    user = db.scalar(select(User).where(User.account_number == account_number))
+    
+    if not user:
+        raise HTTPException(status_code=404,detail="user not found.")
+
+    if current_user.role is UserRoles.CUSTOMER and current_user.user_id == user.user_id:
+        raise HTTPException(status_code=400,detail="Unable to send payment to yourself.")
+
+    return UserResponse(
+                user_id=user.user_id,
+                username=user.username,
+                account_number=user.account_number
+            )
 
 
