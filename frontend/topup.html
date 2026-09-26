@@ -1,0 +1,810 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Send money — Tunai</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --brand: #10312f;
+            --brand-soft: #1c4a46;
+            --paper: #ffffff;
+            --surface: #f3f5f3;
+            --ink: #14201e;
+            --muted: #5e6e6b;
+            --rule: #dbe2df;
+            --field: #ffffff;
+            --amber: #c98a2b;
+            --amber-soft: #f6ead2;
+            --danger: #9b3122;
+            --on-brand: #eaf1ee;
+            --good: #2f7a4d;
+            --good-soft: #e5f3ea;
+            --font: "Archivo", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            --r: 10px;
+            --sidebar-w: 248px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --brand: #0b2422;
+                --brand-soft: #163b38;
+                --paper: #111917;
+                --surface: #0d1514;
+                --ink: #e6edea;
+                --muted: #8c9a96;
+                --rule: #26332f;
+                --field: #18211f;
+                --amber: #e0ae5c;
+                --amber-soft: #2c2415;
+                --danger: #e08776;
+                --on-brand: #dce9e4;
+                --good: #6bbf8b;
+                --good-soft: #142a1c;
+            }
+        }
+
+        :root[data-theme="dark"] {
+            --brand: #0b2422;
+            --brand-soft: #163b38;
+            --paper: #111917;
+            --surface: #0d1514;
+            --ink: #e6edea;
+            --muted: #8c9a96;
+            --rule: #26332f;
+            --field: #18211f;
+            --amber: #e0ae5c;
+            --amber-soft: #2c2415;
+            --danger: #e08776;
+            --on-brand: #dce9e4;
+            --good: #6bbf8b;
+            --good-soft: #142a1c;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            visibility: hidden;
+            margin: 0;
+            background: var(--surface);
+            color: var(--ink);
+            font-family: var(--font);
+            font-size: 16px;
+            line-height: 1.55;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body.auth-checked {
+            visibility: visible;
+        }
+
+        :focus-visible {
+            border-color: var(--brand-soft);
+            outline: 2px solid var(--brand);
+            outline-offset: 1px;
+        }
+
+        button {
+            font: inherit;
+        }
+
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        input:-webkit-autofill:active {
+            -webkit-text-fill-color: inherit !important;
+            -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
+            box-shadow: 0 0 0px 1000px transparent inset !important;
+            background-color: transparent !important;
+            background-image: none !important;
+            transition: background-color 5000s ease-in-out 0s !important;
+        }
+
+        /* ---------- shell ---------- */
+        .shell {
+            display: grid;
+            grid-template-columns: var(--sidebar-w) 1fr;
+            min-height: 100%;
+        }
+
+        .side {
+            background: var(--brand);
+            color: var(--on-brand);
+            padding: 1.75rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        .mark {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            font-size: 1.375rem;
+            padding: 0 0.4rem;
+        }
+
+        .mark span.glyph {
+            width: 30px;
+            height: 30px;
+            border-radius: 7px;
+            background: var(--amber);
+            display: grid;
+            place-items: center;
+            color: #10312f;
+            font-size: 1rem;
+            font-weight: 700;
+            flex: none;
+        }
+
+        nav.nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            flex: 1;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            padding: 0.6rem 0.7rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #b7c9c3;
+            text-decoration: none;
+        }
+
+        .nav-link:hover {
+            background: var(--brand-soft);
+            color: var(--on-brand);
+        }
+
+        .nav-link[aria-current="page"] {
+            background: var(--brand-soft);
+            color: var(--on-brand);
+        }
+
+        .nav-link[aria-current="page"] svg {
+            color: var(--amber);
+        }
+
+        .side-foot {
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            padding-top: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--brand-soft);
+            color: var(--on-brand);
+            display: grid;
+            place-items: center;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            flex: none;
+        }
+
+        .side-foot .who b {
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: block;
+        }
+
+        .side-foot .who span {
+            font-size: 0.75rem;
+            color: #93aba5;
+        }
+
+        /* ---------- main ---------- */
+        main.panel {
+            padding: clamp(1.5rem, 3vw, 2.75rem);
+            max-width: 640px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .topline {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .back-btn {
+            appearance: none;
+            border: 1px solid var(--rule);
+            background: var(--paper);
+            border-radius: 9px;
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            color: var(--ink);
+            flex: none;
+        }
+
+        .topline h1 {
+            font-size: 1.375rem;
+            letter-spacing: -0.02em;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        /* ---------- step indicator ---------- */
+        .steps {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .steps .step {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--muted);
+            font-size: 0.8125rem;
+            font-weight: 500;
+        }
+
+        .steps .dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 1px solid var(--rule);
+            display: grid;
+            place-items: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--muted);
+            flex: none;
+        }
+
+        .steps .step.done .dot {
+            background: var(--brand);
+            border-color: var(--brand);
+            color: var(--on-brand);
+        }
+
+        .steps .step.active .dot {
+            background: var(--amber);
+            border-color: var(--amber);
+            color: #2b1c02;
+        }
+
+        .steps .step.active,
+        .steps .step.done {
+            color: var(--ink);
+        }
+
+        .steps .rule {
+            flex: 1;
+            height: 1px;
+            background: var(--rule);
+        }
+
+        /* ---------- panels ---------- */
+        .step-panel {
+            display: none;
+        }
+
+        .step-panel.active {
+            display: block;
+        }
+
+        .card {
+            background: var(--paper);
+            border: 1px solid var(--rule);
+            border-radius: var(--r);
+            padding: 1.25rem;
+        }
+
+        .field {
+            margin-bottom: 1rem;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.7rem 0.9rem;
+            border: 1px solid var(--rule);
+            background: var(--field);
+            border-radius: var(--r);
+            color: var(--ink);
+            font: inherit;
+            font-size: 0.9375rem;
+        }
+
+        .search-input:focus {
+            border-color: var(--brand-soft);
+        }
+
+        .error {
+            font-size: 0.8125rem;
+            color: var(--danger);
+            margin: 0.4rem 0 0 4px;
+            line-height: 1.4;
+            display: none;
+        }
+
+        .error[data-shown="true"] {
+            display: block;
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin: 0 0 0.6rem;
+        }
+
+        .recent-row {
+            display: flex;
+            gap: 0.9rem;
+            overflow-x: auto;
+            padding-bottom: 0.25rem;
+            margin-bottom: 1.4rem;
+        }
+
+        .contact-list {
+            border: 1px solid var(--rule);
+            border-radius: var(--r);
+            overflow: hidden;
+        }
+
+        .contact-row {
+            width: 100%;
+            appearance: none;
+            border: 0;
+            background: var(--paper);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--rule);
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .contact-row:last-child {
+            border-bottom: 0;
+        }
+
+        .contact-row:hover {
+            background: var(--surface);
+        }
+
+        .contact-row .avatar {
+            background: var(--surface);
+            color: var(--ink);
+            border: 1px solid var(--rule);
+            font-size: 0.75rem;
+        }
+
+        .contact-row .meta {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .contact-row .meta b {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .contact-row .meta span {
+            font-size: 0.8125rem;
+            color: var(--muted);
+        }
+
+        .contact-row .chev {
+            color: var(--muted);
+            flex: none;
+        }
+
+        /* ---------- amount step ---------- */
+        .amount-wrap {
+            text-align: center;
+            padding: 1.75rem 1rem 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .amount-wrap .cur {
+            font-size: 1.1rem;
+            color: var(--muted);
+            vertical-align: top;
+            position: relative;
+            top: 0.6rem;
+            margin-right: 0.35rem;
+        }
+
+        .amount-input {
+            border: 0;
+            background: transparent;
+            font: inherit;
+            font-family: var(--font);
+            font-size: 2.75rem;
+            font-weight: 600;
+            letter-spacing: -0.03em;
+            color: var(--ink);
+            width: 60%;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .amount-input:focus::placeholder {
+            color: transparent;
+        }
+
+        .amount-input:focus::placeholder {
+            color: transparent;
+        }
+
+        .amount-input:focus-visible {
+            outline: none;
+            border-color: transparent;
+        }
+
+        .amount-input::placeholder {
+            color: var(--rule);
+        }
+
+        .amount-help {
+            text-align: center;
+            font-size: 0.8125rem;
+            color: var(--muted);
+            margin: 0 0 1.4rem;
+        }
+
+        .amount-help strong {
+            color: var(--ink);
+            font-weight: 600;
+        }
+
+        .chip-row {
+            display: flex;
+            gap: 0.55rem;
+            justify-content: center;
+            margin-bottom: 1.6rem;
+            flex-wrap: wrap;
+        }
+
+        .amt-chip {
+            appearance: none;
+            border: 1px solid var(--rule);
+            background: var(--paper);
+            border-radius: 999px;
+            padding: 0.4rem 0.9rem;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--ink);
+            cursor: pointer;
+        }
+
+        .amt-chip:hover {
+            border-color: var(--brand-soft);
+        }
+
+        /* ---------- review step ---------- */
+        .receipt {
+            background: var(--brand);
+            color: var(--on-brand);
+            border-radius: 14px;
+            padding: 1.5rem 1.75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .receipt .to-label {
+            font-size: 0.8125rem;
+            color: #a9c0b9;
+            margin: 0 0 0.3rem;
+        }
+
+        .receipt .to-name {
+            font-size: 1.375rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            margin: 0 0 1rem;
+        }
+
+        .receipt .amt {
+            font-size: 2rem;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.03em;
+        }
+
+        .receipt-lines {
+            border: 1px solid var(--rule);
+            border-radius: var(--r);
+            background: var(--paper);
+            padding: 0.25rem 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .rline {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.7rem 0;
+            border-bottom: 1px solid var(--rule);
+            font-size: 0.875rem;
+        }
+
+        .rline:last-child {
+            border-bottom: 0;
+        }
+
+        .rline .k {
+            color: var(--muted);
+        }
+
+        .rline .v {
+            font-weight: 500;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .rline.total .v {
+            font-weight: 700;
+        }
+
+        /* ---------- footer actions ---------- */
+        .actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.75rem;
+        }
+
+        .btn {
+            appearance: none;
+            border: 0;
+            font: inherit;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            padding: 0.75rem 1.2rem;
+            border-radius: var(--r);
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .btn-amber {
+            background: var(--amber);
+            color: #2b1c02;
+        }
+
+        .btn-amber:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-outline {
+            background: var(--paper);
+            color: var(--ink);
+            border: 1px solid var(--rule);
+            flex: none;
+            padding: 0.75rem 1.4rem;
+        }
+
+        /* ---------- success ---------- */
+        .success {
+            text-align: center;
+            padding: 2rem 1rem;
+        }
+
+        .success .check {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--good-soft);
+            color: var(--good);
+            display: grid;
+            place-items: center;
+            margin: 0 auto 1.1rem;
+        }
+
+        .success h2 {
+            font-size: 1.25rem;
+            margin: 0 0 0.4rem;
+        }
+
+        .success p {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin: 0 0 1.6rem;
+        }
+
+        @media (max-width: 860px) {
+            .shell {
+                grid-template-columns: 1fr;
+            }
+
+            .side {
+                position: static;
+                height: auto;
+                flex-direction: row;
+                align-items: center;
+                gap: 1rem;
+                padding: 1rem 1.25rem;
+            }
+
+            .side nav.nav {
+                display: none;
+            }
+
+            .side-foot .who {
+                display: none;
+            }
+
+            .side-foot {
+                border-top: 0;
+                padding-top: 0;
+                margin-left: auto;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="shell">
+        <aside class="side">
+            <div class="mark">
+                <span class="glyph" aria-hidden="true">T</span>Tunai
+            </div>
+            <nav class="nav" aria-label="Main">
+                <a class="nav-link" href="dashboard.html">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.8">
+                        <rect x="3" y="3" width="8" height="8" rx="1.5" />
+                        <rect x="13" y="3" width="8" height="8" rx="1.5" />
+                        <rect x="3" y="13" width="8" height="8" rx="1.5" />
+                        <rect x="13" y="13" width="8" height="8" rx="1.5" />
+                    </svg>
+                    Overview
+                </a>
+                <a class="nav-link" href="#" aria-current="page">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.8">
+                        <path d="M3 12h4l2-7 6 14 2-7h4" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    Activity
+                </a>
+                <a class="nav-link" href="#">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.8">
+                        <rect x="2.5" y="5" width="19" height="14" rx="2.5" />
+                        <path d="M2.5 9.5h19" stroke-linecap="round" />
+                    </svg>
+                    Cards
+                </a>
+                <a class="nav-link" href="#">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.8">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M19.4 13.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V19.5a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H4.5a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H10a1.7 1.7 0 0 0 1-1.55V4.5a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V10a1.7 1.7 0 0 0 1.55 1h.09a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z" />
+                    </svg>
+                    Settings
+                </a>
+            </nav>
+            <div class="side-foot">
+                <div class="avatar user-initial" aria-hidden="true"></div>
+                <div class="who">
+                    <b class="user-fullname"></b>
+                    <span class="user-handle"></span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="panel">
+            <div class="topline">
+                <button class="back-btn" type="button" id="pageBack" aria-label="Back to dashboard"
+                    onclick="location.href='dashboard.html'">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.8">
+                        <path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </button>
+                <h1>Top Up</h1>
+            </div>
+
+            <div class="steps" id="stepIndicator">
+                <div class="step active" data-step="1"><span class="dot">1</span>Amount</div>
+                <div class="rule"></div>
+                <div class="step" data-step="2"><span class="dot">2</span>Review</div>
+            </div>
+
+            <!-- STEP 1: AMOUNT -->
+            <section class="step-panel active" data-panel="1">
+                <div class="amount-wrap">
+                    <span class="cur">RM</span><input class="amount-input" id="amountInput" type="text"
+                        inputmode="decimal" placeholder="0.00" />
+                </div>
+                <p class="amount-help">Available balance: <strong class="user-balance">RM 0.00</strong></p>
+
+                <div class="chip-row">
+                    <button class="amt-chip" data-amt="20">RM 20</button>
+                    <button class="amt-chip" data-amt="50">RM 50</button>
+                    <button class="amt-chip" data-amt="100">RM 100</button>
+                    <button class="amt-chip" data-amt="250">RM 250</button>
+                </div>
+            </section>
+
+            <!-- STEP 2: REVIEW -->
+            <section class="step-panel" data-panel="2">
+                <div class="receipt">
+                    <p class="to-label">Top Up Amount</p>
+                    <div class="amt" id="reviewAmount">RM 0.00</div>
+                </div>
+
+                <div class="receipt-lines">
+                    <div class="rline"><span class="k">Transaction fee</span><span class="v">RM 0.00</span></div>
+                    <div class="rline total"><span class="k">Total</span><span class="v" id="reviewTotal">RM 0.00</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SUCCESS -->
+            <section class="step-panel" data-panel="success">
+                <div class="success">
+                    <div class="check" aria-hidden="true">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2">
+                            <path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </div>
+                    <h2 id="successHeading">Sent RM 0.00 to Phillip Young</h2>
+                    <p>Arrived in 1.2 seconds · <span id="successTime"></span></p>
+                    <button class="btn btn-amber" type="button" style="max-width:220px;margin:0 auto;display:block;"
+                        onclick="location.href='dashboard.html'">Back to overview</button>
+                </div>
+            </section>
+
+            <div class="actions" id="actionsBar">
+                <button class="btn btn-outline" type="button" id="btnBack" style="display:none;">Back</button>
+                <button class="btn btn-amber" type="button" id="btnNext" disabled>Continue</button>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="./js/pages/topup_page.js"></script>
+</body>
+
+</html>

@@ -5,6 +5,7 @@ import { setupStep1Recipient } from "../ui/step-1-recipient.js";
 import { setupStep2Amount } from "../ui/step-2-amount.js";
 import { setupButtons } from "../ui/setup-buttons.js";
 
+
 var state = {
     step: 1,
     name: "",

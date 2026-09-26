@@ -99,6 +99,18 @@
       font: inherit;
     }
 
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active {
+      -webkit-text-fill-color: inherit !important;
+      -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
+      box-shadow: 0 0 0px 1000px transparent inset !important;
+      background-color: transparent !important;
+      background-image: none !important;
+      transition: background-color 5000s ease-in-out 0s !important;
+    }
+
     /* ---------- shell ---------- */
     .shell {
       display: grid;
@@ -859,42 +871,6 @@
           </button>
           <button class="recent-chip" data-name="Wei Ling" data-detail="•••• 4402" aria-pressed="false">
             <span class="avatar">WL</span><span class="name">Wei Ling</span>
-          </button>
-        </div>
-
-        <p class="section-label">Contacts</p>
-        <div class="contact-list">
-          <button class="contact-row" data-name="Phillip Young" data-detail="•••• 1187">
-            <span class="avatar">PY</span>
-            <span class="meta"><b>Phillip Young</b><span>+60 12-345 1187</span></span>
-            <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="1.8">
-              <path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </button>
-          <button class="contact-row" data-name="Nurul Huda" data-detail="•••• 0093">
-            <span class="avatar">NH</span>
-            <span class="meta"><b>Nurul Huda</b><span>+60 19-882 0093</span></span>
-            <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="1.8">
-              <path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </button>
-          <button class="contact-row" data-name="Wei Ling" data-detail="•••• 4402">
-            <span class="avatar">WL</span>
-            <span class="meta"><b>Wei Ling</b><span>@weiling</span></span>
-            <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="1.8">
-              <path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </button>
-          <button class="contact-row" data-name="Farah Aziz" data-detail="•••• 7761">
-            <span class="avatar">FA</span>
-            <span class="meta"><b>Farah Aziz</b><span>+60 17-902 7761</span></span>
-            <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="1.8">
-              <path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
           </button>
         </div>
       </section>

@@ -1,30 +1,27 @@
-import { refreshNextState, goTo } from "./goto.js";
+import { refreshNextStateTopup, goToTopup } from "./goto.js";
 
-export function setupStep2Amount(state, elements) {
+export function setupTopupAmount(state, elements) {
+
     var amountInput = document.getElementById("amountInput");
     amountInput.addEventListener("input", function () {
         var digits = amountInput.value.replace(/[^\d.]/g, "");
         amountInput.value = digits;
         state.amount = parseFloat(digits) || 0;
-        refreshNextState(elements.btnNext, state);
+        refreshNextStateTopup(elements.btnNext, state);
     });
 
     document.querySelectorAll(".amt-chip").forEach(function (chip) {
         chip.addEventListener("click", function () {
             amountInput.value = chip.dataset.amt + ".00";
             state.amount = parseFloat(chip.dataset.amt);
-            refreshNextState(elements.btnNext, state);
+            refreshNextStateTopup(elements.btnNext, state);
         });
-    });
-
-    document.getElementById("noteInput").addEventListener("input", function (e) {
-        state.note = e.target.value;
     });
 
     document.querySelectorAll("[data-goto]").forEach(function (el) {
 
         el.addEventListener("click", function () {
-            goTo(parseInt(el.dataset.goto, 10), state, elements);
+            goToTopup(parseInt(el.dataset.goto, 10), state, elements);
         });
 
     });

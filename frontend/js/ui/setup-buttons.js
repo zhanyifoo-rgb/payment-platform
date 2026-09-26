@@ -1,5 +1,6 @@
 import { verifyRecipient } from "../auth/verify-recipient.js";
-import { goTo } from "./goto.js"
+import { goTo, goToTopup } from "./goto.js"
+import { handleCreatePayment, handleTopUp } from "../transactions/create_transaction.js";
 
 export function setupButtons(state, elements) {
 
@@ -9,11 +10,7 @@ export function setupButtons(state, elements) {
         } else if (state.step < 3) {
             goTo(state.step + 1, state, elements);
         } else {
-            document.getElementById("successHeading").textContent = "Sent " + fmt(state.amount) + " to " + state.name;
-            document.getElementById("successTime").textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-            panels.forEach(function (p) { p.classList.toggle("active", p.dataset.panel === "success"); });
-            document.getElementById("stepIndicator").style.display = "none";
-            actionsBar.style.display = "none";
+            handleCreatePayment(state.accountNumber, state.amount)
         }
     });
 
@@ -24,3 +21,19 @@ export function setupButtons(state, elements) {
 
 }
 
+export function setupButtonsTopup(state, elements) {
+
+    elements.btnNext.addEventListener("click", function () {
+        if (state.step == 1) {
+            goToTopup(state.step + 1, state, elements);
+        } else {
+            handleTopUp(state.accountNumber, state.amount)
+        }
+    });
+
+    btnBack.addEventListener("click", function () {
+        if (state.step > 1)
+            goToTopup(state.step - 1, state, elements);
+    });
+
+}

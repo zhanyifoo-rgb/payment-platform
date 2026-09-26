@@ -14,7 +14,7 @@ export function setupStep1Recipient(state, elements) {
         goTo(2, state, elements);
     }
 
-    document.querySelectorAll(".recent-chip, .contact-row").forEach(function (el) {
+    document.querySelectorAll(".recent-chip").forEach(function (el) {
         el.addEventListener("click", function () {
             selectRecipient(el.dataset.name, el.dataset.detail);
         });
@@ -31,13 +31,6 @@ export function setupStep1Recipient(state, elements) {
             document.getElementById("recipientSearch-err");
 
         errorElement.setAttribute("data-shown", "false");
-    });
-
-    document.querySelectorAll(".recent-chip, .contact-row").forEach(function (el) {
-        el.addEventListener("click", function () {
-            selectRecipient(el.dataset.name, el.dataset.detail);
-        });
-
     });
 
 }

@@ -1,111 +1,115 @@
 from app.config import settings
 import pika
 
+
 RABBITMQ_URL = settings.rabbitmq_url
 
 params = pika.URLParameters(RABBITMQ_URL)
 
+
 def create_connection():
     return pika.BlockingConnection(params)
 
+
 def setup_rabbitmq(channel):
-        # Main exchange
+
+    # Main exchange
     channel.exchange_declare(
-        exchange="payments",
+        exchange="transactions",
         exchange_type="topic",
         durable=True
     )
 
-    # Main payment processing queue
+    # Main transaction processing queue
     channel.queue_declare(
-        queue="payment_processing_queue",
+        queue="transaction_processing_queue",
         durable=True
     )
 
     channel.queue_bind(
-        exchange="payments",
-        queue="payment_processing_queue",
-        routing_key="payment.created"
+        exchange="transactions",
+        queue="transaction_processing_queue",
+        routing_key="transaction.created"
     )
 
     # Retry consumer queue
     channel.queue_declare(
-        queue="payment_retry_queue",
+        queue="transaction_retry_queue",
         durable=True
     )
 
     channel.queue_bind(
-        exchange="payments",
-        queue="payment_retry_queue",
-        routing_key="payment.retry"
+        exchange="transactions",
+        queue="transaction_retry_queue",
+        routing_key="transaction.retry"
     )
 
     # 2 second retry
     channel.queue_declare(
-        queue="payment.retry.2s",
+        queue="transaction.retry.2s",
         durable=True,
         arguments={
             "x-message-ttl": 2000,
-            "x-dead-letter-exchange": "payments",
-            "x-dead-letter-routing-key": "payment.retry"
+            "x-dead-letter-exchange": "transactions",
+            "x-dead-letter-routing-key": "transaction.retry"
         }
     )
 
     channel.queue_bind(
-        exchange="payments",
-        queue="payment.retry.2s",
-        routing_key="payment.retry.2s"
+        exchange="transactions",
+        queue="transaction.retry.2s",
+        routing_key="transaction.retry.2s"
     )
 
     # 4 second retry
     channel.queue_declare(
-        queue="payment.retry.4s",
+        queue="transaction.retry.4s",
         durable=True,
         arguments={
             "x-message-ttl": 4000,
-            "x-dead-letter-exchange": "payments",
-            "x-dead-letter-routing-key": "payment.retry"
+            "x-dead-letter-exchange": "transactions",
+            "x-dead-letter-routing-key": "transaction.retry"
         }
     )
 
     channel.queue_bind(
-        exchange="payments",
-        queue="payment.retry.4s",
-        routing_key="payment.retry.4s"
+        exchange="transactions",
+        queue="transaction.retry.4s",
+        routing_key="transaction.retry.4s"
     )
 
     # 8 second retry
     channel.queue_declare(
-        queue="payment.retry.8s",
+        queue="transaction.retry.8s",
         durable=True,
         arguments={
             "x-message-ttl": 8000,
-            "x-dead-letter-exchange": "payments",
-            "x-dead-letter-routing-key": "payment.retry"
+            "x-dead-letter-exchange": "transactions",
+            "x-dead-letter-routing-key": "transaction.retry"
         }
     )
 
     channel.queue_bind(
-        exchange="payments",
-        queue="payment.retry.8s",
-        routing_key="payment.retry.8s"
+        exchange="transactions",
+        queue="transaction.retry.8s",
+        routing_key="transaction.retry.8s"
     )
 
     # Dead-letter exchange
     channel.exchange_declare(
-        exchange="payments.dlx",
+        exchange="transactions.dlx",
         exchange_type="topic",
         durable=True
     )
 
-    # Dead-letter Queue
+    # Dead-letter queue
     channel.queue_declare(
-        queue="payment.dlq",
+        queue="transaction.dlq",
         durable=True
     )
 
     channel.queue_bind(
-        queue="payment.dlq",
-        exchange="payments.dlx",
-        routing_key="payment.failed"
+        queue="transaction.dlq",
+        exchange="transactions.dlx",
+        routing_key="transaction.failed"
     )

@@ -100,7 +100,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
 @router.get("/me")
 def get_my_profile(current_user: User = Depends(get_current_user)):
-    print(f"{current_user.first_name}")
+    
     return {
         "username": current_user.username,
         "firstname": current_user.first_name,

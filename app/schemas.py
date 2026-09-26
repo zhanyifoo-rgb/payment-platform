@@ -1,59 +1,83 @@
 from enum import Enum
-from decimal import Decimal 
+from decimal import Decimal
 from pydantic import BaseModel, Field
 from uuid import UUID
 
+
 # region Enums
-class PaymentStatus(str, Enum):
+
+class TransactionType(str, Enum):
+    PAYMENT = "payment"
+    TOPUP = "topup"
+
+
+class TransactionStatus(str, Enum):
     PENDING = "pending"
     PROCESSING = "processing"
     SUCCEEDED = "succeeded"
-    FAILED = "failed" 
-    CANCELLED = "cancelled" 
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
 
 class Currencies(str, Enum):
     MYR = "MYR"
     USD = "USD"
     SGD = "SGD"
 
+
 class UserRoles(str, Enum):
     CUSTOMER = "Customer"
     PAYMENTPROCESSOR = "PaymentProcessor"
     ADMIN = "Admin"
 
-# endregion 
 
-# region payments
-class PaymentRequest(BaseModel):
+# endregion
+
+
+# region Transactions
+
+class TransactionRequest(BaseModel):
+    transaction_type: TransactionType
     recipient_account_number: str
-    amount: Decimal = Field(gt=0,decimal_places=2)
+    amount: Decimal = Field(
+        gt=0,
+        decimal_places=2
+    )
     currency: Currencies
 
-class PaymentResponse(BaseModel):
-    payment_id: UUID
+
+class TransactionResponse(BaseModel):
+    transaction_type: TransactionType
+    transaction_id: UUID
     user_id: UUID
     amount: Decimal
     currency: Currencies
-    status: PaymentStatus
+    status: TransactionStatus
     recipient_account_number: str
 
-class PaymentStatusUpdate(BaseModel):
-    status: PaymentStatus
+
+class TransactionStatusUpdate(BaseModel):
+    status: TransactionStatus
+
+
 # endregion
 
-# region users
+
+# region Users
 
 class UserRegister(BaseModel):
     username: str
     password: str
     email: str
     phone: str
-    firstname: str
-    lastname: str
+    first_name: str
+    last_name: str
+
 
 class UserResponse(BaseModel):
     user_id: UUID
     username: str
     account_number: str
+
 
 # endregion

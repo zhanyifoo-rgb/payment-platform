@@ -1,11 +1,11 @@
 
-class PaymentProcessingError(Exception):
+class TransactionProcessingError(Exception):
     pass
 
-class TemporaryPaymentError(Exception):
+class TemporaryTransactionError(Exception):
     pass
 
-class PermanentPaymentError(Exception):
+class PermanentTransactionError(Exception):
     pass
 
 class InsufficientFundError(Exception):
