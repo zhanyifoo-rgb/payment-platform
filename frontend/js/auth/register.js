@@ -24,9 +24,9 @@ export async function handleRegistration() {
 
     const username =
         usernameInput.value.trim();
-    const firstname =
+    const first_name =
         firstNameInput.value.trim();
-    const lastname =
+    const last_name =
         lastNameInput.value.trim();
     const email =
         emailInput.value.trim();
@@ -54,7 +54,7 @@ export async function handleRegistration() {
 
     // First name
     const firstNameValid =
-        firstname.length > 0;
+        first_name.length > 0;
 
     if (!show(
         firstNameInput,
@@ -68,7 +68,7 @@ export async function handleRegistration() {
 
     // First name
     const lastNameValid =
-        lastname.length > 0;
+        last_name.length > 0;
 
     if (!show(
         lastNameInput,
@@ -138,10 +138,10 @@ export async function handleRegistration() {
             email,
             phone,
             password,
-            firstname,
-            lastname
+            first_name,
+            last_name
         });
-        
+
         sessionStorage.setItem("registrationSuccess", "true");
         window.location.reload();
 
