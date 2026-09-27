@@ -10,11 +10,11 @@ export function setupButtons(state, elements) {
         } else if (state.step < 3) {
             goTo(state.step + 1, state, elements);
         } else {
-            handleCreatePayment(state.accountNumber, state.amount)
+            handleCreatePayment(state, elements)
         }
     });
 
-    btnBack.addEventListener("click", function () {
+    elements.btnBack.addEventListener("click", function () {
         if (state.step > 1)
             goTo(state.step - 1, state, elements);
     });
@@ -27,11 +27,11 @@ export function setupButtonsTopup(state, elements) {
         if (state.step == 1) {
             goToTopup(state.step + 1, state, elements);
         } else {
-            handleTopUp(state.accountNumber, state.amount)
+            handleTopUp(state, elements)
         }
     });
 
-    btnBack.addEventListener("click", function () {
+    elements.btnBack.addEventListener("click", function () {
         if (state.step > 1)
             goToTopup(state.step - 1, state, elements);
     });

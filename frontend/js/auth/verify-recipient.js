@@ -1,5 +1,5 @@
 import { getRecipient } from "../api/auth.js";
-import { goTo } from "../ui/goto.js";
+import { goTo, initials } from "../ui/goto.js";
 
 export async function verifyRecipient(state, elements) {
 
@@ -8,10 +8,12 @@ export async function verifyRecipient(state, elements) {
 
     try {
 
-        const data = await getRecipient(accountNumberInput.value);
-
-        state.name = `${data.firstname} ${data.lastname}`;
+        const data = await getRecipient(state.accountNumber);
+        state.name = `${data.first_name} ${data.last_name}`;
         state.accountNumber = data.account_number;
+        document.getElementById("pillAvatar").textContent = initials(state.name);
+        document.getElementById("pillName").textContent = state.name;
+        document.getElementById("pillDetail").textContent = data.account_number;
 
         goTo(2, state, elements);
 

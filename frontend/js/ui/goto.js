@@ -31,6 +31,12 @@ export function goTo(step, state, elements) {
         s.classList.toggle("done", n < step);
     });
 
+    if (step === "status") {
+        actionsBar.style.display = "none";
+        stepIndicator.style.display = "none";
+        return;
+    }
+
     btnBack.style.display = step > 1 ? "inline-block" : "none";
     actionsBar.style.display = "flex";
 
@@ -57,6 +63,7 @@ export function goToTopup(step, state, elements) {
         panels,
         stepEls,
         actionsBar,
+        stepIndicator,
         btnNext,
         btnBack
     } = elements;
@@ -77,6 +84,12 @@ export function goToTopup(step, state, elements) {
         s.classList.toggle("active", n === step);
         s.classList.toggle("done", n < step);
     });
+
+    if (step === "status") {
+        actionsBar.style.display = "none";
+        stepIndicator.style.display = "none";
+        return;
+    }
 
     btnBack.style.display = step > 1 ? "inline-block" : "none";
     actionsBar.style.display = "flex";

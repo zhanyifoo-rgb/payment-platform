@@ -78,6 +78,8 @@ class UserResponse(BaseModel):
     user_id: UUID
     username: str
     account_number: str
+    first_name: str
+    last_name: str
 
 
 # endregion

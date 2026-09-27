@@ -52,7 +52,7 @@ def process_transaction(transaction_id: str):
             return
 
     # Wait for processing time
-    time.sleep(random.randint(1, 4))
+    time.sleep(1)
 
     if random.random() < 0.2:
         if random.random() < 0.5:

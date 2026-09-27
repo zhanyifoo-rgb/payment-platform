@@ -1,13 +1,20 @@
 import { API_URL } from "../config.js";
 
 export async function apiRequest(endpoint, options = {}) {
+    const token = sessionStorage.getItem("access_token");
+
+    const headers = {
+        "Content-Type": "application/json",
+        ...options.headers,
+    };
+
+    if (token) {
+        headers.Authorization = `Bearer ${token}`;
+    }
 
     const response = await fetch(`${API_URL}${endpoint}`, {
         ...options,
-        headers: {
-            "Content-Type": "application/json",
-            ...options.headers
-        }
+        headers
     });
 
     const data = await response.json();

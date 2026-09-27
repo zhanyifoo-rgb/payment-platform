@@ -10,6 +10,7 @@ var state = {
     name: "",
     detail: "",
     amount: 0,
+    accountNumber: "",
     balance: 0
 };
 
@@ -17,6 +18,7 @@ var elements = {
     panels: document.querySelectorAll(".step-panel"),
     stepEls: document.querySelectorAll(".steps .step"),
     actionsBar: document.getElementById("actionsBar"),
+    stepIndicator: document.getElementById("stepIndicator"),
     btnNext: document.getElementById("btnNext"),
     btnBack: document.getElementById("btnBack")
 };
@@ -33,6 +35,7 @@ async function initTopUpPage() {
         const user = await getCurrentUser();
 
         state.balance = Number(user.available_balance);
+        state.accountNumber = String(user.account_number);
 
         // Populate dashboard
         document.querySelectorAll(".user-username")
@@ -67,8 +70,6 @@ async function initTopUpPage() {
         setupTopupAmount(state, elements);
 
         setupButtonsTopup(state, elements);
-
-        // goTo(1, state, elements);
 
     } catch (error) {
         sessionStorage.removeItem("access_token");

@@ -298,7 +298,7 @@ def create_topup_transaction(
         amount=transaction.amount,
         currency=transaction.currency,
         transaction_status=TransactionStatus.PENDING,
-        recipient_account_number=transaction.recipient_account_number
+        recipient_account_number=current_user.account_number
     )
 
     current_request_hash = create_request_hash(

@@ -73,7 +73,7 @@ async function initCreatePaymentPage() {
 
         setupButtons(state, elements);
 
-        goTo(1, state, elements);
+        // goTo(1, state, elements);
 
     } catch (error) {
         sessionStorage.removeItem("access_token");

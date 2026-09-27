@@ -77,7 +77,9 @@ def register(form_data: UserRegister, db: Session = Depends(get_db)):
     return UserResponse(
          user_id=new_user.user_id,
          username=new_user.username,
-         account_number=new_user.account_number
+         account_number=new_user.account_number,
+         first_name=new_user.first_name,
+         last_name=new_user.last_name
     )
 
 @router.post("/login")
@@ -121,11 +123,13 @@ def get_payment(account_number: str,db: Session = Depends(get_db), current_user:
 
     if current_user.role is UserRoles.CUSTOMER and current_user.user_id == user.user_id:
         raise HTTPException(status_code=400,detail="Unable to send payment to yourself.")
-
+    
     return UserResponse(
                 user_id=user.user_id,
                 username=user.username,
-                account_number=user.account_number
+                account_number=user.account_number,
+                first_name=user.first_name,
+                last_name=user.last_name
             )
 
 
