@@ -5,7 +5,7 @@ async function initDashboard() {
     const token = sessionStorage.getItem("access_token");
 
     if (!token) {
-        window.location.replace("./login.html");
+        window.location.replace("./index.html");
         return;
     }
 
@@ -50,7 +50,7 @@ async function initDashboard() {
 
     } catch (error) {
         sessionStorage.removeItem("access_token");
-        window.location.replace("./login.html");
+        window.location.replace("./index.html");
     }
 }
 

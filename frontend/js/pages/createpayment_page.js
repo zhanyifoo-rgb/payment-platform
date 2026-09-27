@@ -28,7 +28,7 @@ async function initCreatePaymentPage() {
     const token = sessionStorage.getItem("access_token");
 
     if (!token) {
-        window.location.replace("./login.html");
+        window.location.replace("./index.html");
         return;
     }
 
@@ -77,7 +77,7 @@ async function initCreatePaymentPage() {
 
     } catch (error) {
         sessionStorage.removeItem("access_token");
-        window.location.replace("./login.html");
+        window.location.replace("./index.html");
     }
 }
 

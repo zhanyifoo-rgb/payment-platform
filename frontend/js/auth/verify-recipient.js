@@ -36,7 +36,7 @@ export async function verifyRecipient(state, elements) {
                 break;
 
             case 401:
-                window.location.href = "./login.html";
+                window.location.href = "./index.html";
                 return;
 
             default:
