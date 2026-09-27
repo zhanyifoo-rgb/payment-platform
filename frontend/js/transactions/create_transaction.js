@@ -2,7 +2,7 @@ import { createPayment, topUp, waitForTransaction } from "../api/transaction.js"
 import { goTo, goToTopup, fmt } from "../ui/goto.js";
 
 function updateTransactionStatus(result, state) {
-    if (result.status === "failed") {
+    if (result.status === "succeeded") {
         document.querySelector(".cross").classList.add("hide");
         document.querySelector(".check").classList.remove("hide");
 

@@ -11,6 +11,7 @@ export async function verifyRecipient(state, elements) {
         const data = await getRecipient(state.accountNumber);
         state.name = `${data.first_name} ${data.last_name}`;
         state.accountNumber = data.account_number;
+        state.detail = data.account_number;
         document.getElementById("pillAvatar").textContent = initials(state.name);
         document.getElementById("pillName").textContent = state.name;
         document.getElementById("pillDetail").textContent = data.account_number;
