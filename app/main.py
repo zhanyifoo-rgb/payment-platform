@@ -12,7 +12,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5500",
         "http://127.0.0.1:5500",
-        "https://payment-platform-project.vercel.app",
+        "https://payment-platform-project1.vercel.app",
         "https://payment-platform-project1-kje2692vw-zhanyifoo-rgb.vercel.app"
     ],
     allow_credentials=True,
